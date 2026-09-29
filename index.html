@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ливача — частные онлайн стримы</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23008000'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>Л</text></svg>"/>
+<style>
+:root{
+  --bg:#0f1216; --bg2:#151a20; --card:#1a2129; --card2:#202935;
+  --line:#242e3a; --text:#e8edf2; --muted:#8b98a8; --green:#21a94a; --green2:#2ecc71;
+  --red:#e74c3c; --radius:14px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:Roboto,-apple-system,'Segoe UI',Arial,sans-serif;
+  overflow-x:hidden;
+}
+a{color:var(--green2); text-decoration:none}
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit}
+::-webkit-scrollbar{width:8px; height:8px}
+::-webkit-scrollbar-thumb{background:#2c3947; border-radius:8px}
+
+/* ---------- header ---------- */
+header{
+  position:sticky; top:0; z-index:50;
+  display:flex; align-items:center; gap:14px;
+  padding:10px 16px; background:rgba(15,18,22,.92); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.logo{display:flex; align-items:center; gap:9px; font-size:21px; font-weight:700; letter-spacing:.3px; cursor:pointer; white-space:nowrap}
+.logo-badge{width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #34d05e, #008000 70%);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;box-shadow:0 0 12px rgba(34,204,113,.45)}
+.logo small{font-size:9px;color:var(--muted);font-weight:400;vertical-align:super}
+.tabs{display:flex; gap:4px; background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:3px}
+.tabs button{padding:7px 14px; border-radius:8px; font-size:14px; color:var(--muted); transition:.15s}
+.tabs button.on{background:var(--green); color:#fff}
+.tabs button:not(.on):hover{color:var(--text)}
+.search{flex:1; max-width:420px; position:relative}
+.search input{
+  width:100%; padding:9px 14px 9px 36px; border-radius:10px; border:1px solid var(--line);
+  background:var(--bg2); color:var(--text); font-size:14px; outline:none; transition:.15s;
+}
+.search input:focus{border-color:var(--green)}
+.search::before{content:"🔍"; position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:13px; opacity:.6}
+.spacer{flex:1}
+.btn{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:9px 18px; border-radius:10px; font-size:14px; font-weight:600;
+  background:var(--green); color:#fff; transition:.15s;
+}
+.btn:hover{background:var(--green2)}
+.btn.ghost{background:var(--bg2); border:1px solid var(--line); color:var(--text)}
+.btn.ghost:hover{border-color:var(--green)}
+.userchip{display:flex; align-items:center; gap:8px; padding:5px 12px 5px 5px; border-radius:12px; background:var(--bg2); border:1px solid var(--line); font-size:14px; font-weight:600; cursor:pointer}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex:none}
+
+/* ---------- layout ---------- */
+.layout{display:flex; gap:18px; max-width:1280px; margin:0 auto; padding:18px 16px; align-items:flex-start}
+.main-col{flex:1; min-width:0}
+.sidebar{width:300px; flex:none; display:flex; flex-direction:column; gap:14px; position:sticky; top:70px}
+.sec-title{display:flex; align-items:center; gap:9px; font-size:17px; font-weight:700; margin:20px 0 12px}
+.sec-title:first-child{margin-top:2px}
+.sec-title .count{font-size:12px; color:var(--muted); font-weight:400}
+.live-dot{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 rgba(231,76,60,.7);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(231,76,60,.6)}70%{box-shadow:0 0 0 9px rgba(231,76,60,0)}100%{box-shadow:0 0 0 0 rgba(231,76,60,0)}}
+
+/* ---------- stream cards ---------- */
+.streams-row{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px}
+.s-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:.15s}
+.s-card:hover{transform:translateY(-3px); border-color:var(--green)}
+.s-cover{position:relative; height:120px; display:flex; align-items:center; justify-content:center; font-size:46px}
+.s-cover .live{
+  position:absolute; top:9px; left:9px; background:var(--red); color:#fff;
+  font-size:11px; font-weight:700; padding:3px 9px; border-radius:6px; display:flex; gap:5px; align-items:center;
+}
+.s-cover .live::before{content:""; width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+.s-cover .dur{
+  position:absolute; bottom:9px; right:9px; background:rgba(0,0,0,.75); color:#fff;
+  font-size:12px; font-weight:600; padding:2px 8px; border-radius:6px; font-variant-numeric:tabular-nums;
+}
+.s-cover .viewers{
+  position:absolute; bottom:9px; left:9px; background:rgba(0,0,0,.75); color:#fff;
+  font-size:12px; padding:2px 8px; border-radius:6px;
+}
+.s-info{padding:10px 12px}
+.s-info .t{font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.s-info .o{font-size:12px; color:var(--muted); margin-top:3px; display:flex; align-items:center; gap:6px}
+
+/* ---------- chat cards ---------- */
+.chats-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:12px}
+.c-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:.15s}
+.c-card:hover{transform:translateY(-3px); border-color:var(--green)}
+.c-cover{position:relative; height:100px; display:flex; align-items:center; justify-content:center; font-size:40px}
+.c-cover .badge{
+  position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.7); color:#fff;
+  font-size:11.5px; font-weight:600; padding:2px 8px; border-radius:6px; display:flex; gap:5px; align-items:center;
+}
+.c-cover .badge.on::before{content:""; width:7px;height:7px;border-radius:50%;background:var(--green2)}
+.c-info{padding:9px 11px}
+.c-info .t{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.c-info .o{font-size:11.5px; color:var(--muted); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+
+/* ---------- sidebar ---------- */
+.side-block{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px}
+.side-block h4{font-size:14px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px}
+.side-item{display:flex; align-items:center; gap:9px; padding:8px; border-radius:9px; cursor:pointer; font-size:13.5px}
+.side-item:hover{background:var(--card2)}
+.side-item .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.side-item .n{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500}
+.side-item .v{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums}
+.online-box{display:flex; align-items:center; justify-content:space-between}
+.online-box .num{font-size:26px; font-weight:800; color:var(--green2); font-variant-numeric:tabular-nums}
+.empty-note{font-size:13px; color:var(--muted); line-height:1.5}
+
+/* ---------- views ---------- */
+.view{display:none}
+.view.on{display:block}
+.topbar{
+  display:flex; align-items:center; gap:12px; padding:10px 16px;
+  border-bottom:1px solid var(--line); background:var(--bg2); position:sticky; top:52px; z-index:40;
+}
+.topbar .back{width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--line);font-size:17px;flex:none}
+.topbar .back:hover{border-color:var(--green)}
+.topbar .tt{min-width:0}
+.topbar .tt .t{font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.topbar .tt .s{font-size:12px; color:var(--muted); display:flex; gap:10px; align-items:center}
+.dotg{width:8px;height:8px;border-radius:50%;background:var(--green2);display:inline-block}
+
+/* ---------- room ---------- */
+.room-wrap{display:flex; flex-direction:column; height:calc(100vh - 52px - 61px)}
+.msgs{flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; background:radial-gradient(ellipse at top, rgba(33,169,74,.05), transparent 60%)}
+.msg{display:flex; gap:10px; max-width:75%; animation:fadein .2s}
+@keyframes fadein{from{opacity:0; transform:translateY(6px)}to{opacity:1}}
+.msg .body{background:var(--card2); border:1px solid var(--line); padding:8px 12px; border-radius:4px 14px 14px 14px; font-size:14px; line-height:1.45}
+.msg .meta{font-size:11.5px; color:var(--muted); margin-bottom:3px; display:flex; gap:8px}
+.msg .meta b{color:var(--green2); font-weight:600}
+.msg.me{align-self:flex-end; flex-direction:row-reverse}
+.msg.me .body{background:rgba(33,169,74,.18); border-color:rgba(33,169,74,.4); border-radius:14px 4px 14px 14px}
+.msg.me .meta{justify-content:flex-end}
+.msg.sys{align-self:center; max-width:100%}
+.msg.sys .body{background:none; border:none; color:var(--muted); font-size:12px; padding:2px}
+.composer{display:flex; gap:9px; padding:12px 16px; border-top:1px solid var(--line); background:var(--bg2); align-items:center}
+.composer input{flex:1; padding:11px 15px; border-radius:11px; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:14px; outline:none}
+.composer input:focus{border-color:var(--green)}
+.composer .send{width:42px;height:42px;border-radius:11px;background:var(--green);font-size:17px;flex:none}
+.composer .send:hover{background:var(--green2)}
+.icon-btn{width:42px;height:42px;border-radius:11px;background:var(--card);border:1px solid var(--line);font-size:18px;flex:none}
+.icon-btn:hover{border-color:var(--green)}
+
+/* ---------- watch ---------- */
+.watch-wrap{display:grid; grid-template-columns:1fr 330px; gap:0; height:calc(100vh - 52px - 61px)}
+.player-col{display:flex; flex-direction:column; min-width:0; border-right:1px solid var(--line)}
+.player{flex:1; background:#000; position:relative; min-height:240px}
+.player video{width:100%; height:100%; object-fit:contain; display:block}
+.player .pl-badge{position:absolute; top:12px; left:12px; background:var(--red); color:#fff; font-size:12px; font-weight:700; padding:4px 11px; border-radius:7px; display:flex; gap:6px; align-items:center; z-index:5}
+.player .pl-badge::before{content:"";width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s infinite}
+.player .pl-timer{position:absolute; top:12px; left:100px; background:rgba(0,0,0,.65); color:#fff; font-size:12px; padding:4px 10px; border-radius:7px; font-variant-numeric:tabular-nums; z-index:5}
+.chat-col{display:flex; flex-direction:column; min-width:0}
+.chat-col .ch-head{padding:11px 14px; border-bottom:1px solid var(--line); font-size:14px; font-weight:700; background:var(--bg2)}
+.watch-msgs{flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px}
+.wmsg{font-size:13.5px; line-height:1.4; animation:fadein .2s}
+.wmsg b{font-weight:600}
+.wmsg .tm{color:var(--muted); font-size:11px; margin-right:6px}
+.gifts-row{display:flex; gap:8px; padding:10px 14px; border-top:1px solid var(--line); background:var(--bg2); flex-wrap:wrap}
+.gift{padding:7px 13px; border-radius:9px; background:var(--card); border:1px solid var(--line); font-size:13px; transition:.15s}
+.gift:hover{border-color:var(--green); transform:translateY(-1px)}
+
+/* ---------- modal ---------- */
+.modal-bg{position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:100; display:none; align-items:center; justify-content:center; padding:16px}
+.modal-bg.on{display:flex}
+.modal{background:var(--bg2); border:1px solid var(--line); border-radius:18px; padding:24px; width:100%; max-width:360px; animation:fadein .2s}
+.modal h3{font-size:19px; margin-bottom:6px}
+.modal p{font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.5}
+.modal input{width:100%; padding:11px 14px; border-radius:11px; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:14px; outline:none; margin-bottom:12px}
+.modal input:focus{border-color:var(--green)}
+.color-row{display:flex; gap:9px; margin-bottom:16px}
+.color-row span{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.12s}
+.color-row span.on{border-color:#fff; transform:scale(1.12)}
+.modal .btn{width:100%; justify-content:center; padding:12px}
+
+/* ---------- toast ---------- */
+#toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--card2); border:1px solid var(--green); color:var(--text); padding:11px 20px; border-radius:12px; font-size:14px; z-index:200; transition:.3s; opacity:0; max-width:90vw}
+#toast.on{transform:translateX(-50%) translateY(0); opacity:1}
+
+/* ---------- responsive ---------- */
+@media (max-width: 980px){
+  .sidebar{display:none}
+  .watch-wrap{grid-template-columns:1fr; grid-template-rows: 38vh 1fr; height:auto}
+  .player-col{border-right:none; border-bottom:1px solid var(--line)}
+  .chat-col{height:52vh}
+  .tabs{display:none}
+}
+@media (max-width: 640px){
+  header{flex-wrap:wrap}
+  .search{order:5; max-width:none; flex-basis:100%}
+  .msg{max-width:90%}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo" onclick="goHome()">
+    <span class="logo-badge">Л</span>
+    <span>Ливача<small>™</small></span>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button class="on" data-f="all" onclick="setFilter('all')">Чаты</button>
+    <button data-f="online" onclick="setFilter('online')">Online</button>
+    <button data-f="offline" onclick="setFilter('offline')">Офлайн</button>
+  </nav>
+  <div class="search"><input id="q" type="text" placeholder="Поиск чатов и стримов…" oninput="renderHome()"/></div>
+  <div class="spacer"></div>
+  <div id="userBox"></div>
+</header>
+
+<!-- ============ HOME ============ -->
+<div class="view on" id="view-home">
+  <div class="layout">
+    <div class="main-col">
+      <div class="sec-title"><span class="live-dot"></span> Эфир <span class="count" id="streamsCount"></span></div>
+      <div class="streams-row" id="streamsRow"></div>
+      <div class="sec-title">Чаты <span class="count" id="chatsCount"></span></div>
+      <div class="chats-grid" id="chatsGrid"></div>
+      <div style="text-align:center; padding:26px 0 8px">
+        <button class="btn ghost" onclick="toast('В демо-версии создание чатов отключено 🙃')">＋ Создать свой чат</button>
+      </div>
+    </div>
+    <aside class="sidebar">
+      <div class="side-block online-box">
+        <div>
+          <h4 style="margin-bottom:2px">Сейчас на сайте</h4>
+          <div class="empty-note">зрители и авторы</div>
+        </div>
+        <div class="num" id="onlineNum">186</div>
+      </div>
+      <div class="side-block">
+        <h4>📌 Мои чаты</h4>
+        <div class="empty-note" id="myChats">Вы ещё не входили.<br/>Нажмите «Войти» сверху — и чаты появятся здесь.</div>
+      </div>
+      <div class="side-block">
+        <h4>🔥 Топ стримов</h4>
+        <div id="topStreams"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ============ CHAT ROOM ============ -->
+<div class="view" id="view-room">
+  <div class="topbar">
+    <button class="back" onclick="goHome()">←</button>
+    <div class="tt">
+      <div class="t" id="roomTitle"></div>
+      <div class="s"><span><span class="dotg"></span> <span id="roomOwner"></span></span><span>👥 <b id="roomViewers"></b> в чате</span></div>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn ghost" onclick="leaveRoom()">Выйти</button>
+  </div>
+  <div class="room-wrap">
+    <div class="msgs" id="msgs"></div>
+    <div class="composer">
+      <button class="icon-btn" title="Смайлик" onclick="addSmile()">😊</button>
+      <input id="msgInput" type="text" placeholder="Написать сообщение…" onkeydown="if(event.key==='Enter')sendMsg()"/>
+      <button class="icon-btn" title="Голосовое (демо)" onclick="toast('Голосовые сообщения в демо отключены 🎤')">🎤</button>
+      <button class="send" onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ WATCH ============ -->
+<div class="view" id="view-watch">
+  <div class="topbar">
+    <button class="back" onclick="leaveWatch()">←</button>
+    <div class="tt">
+      <div class="t" id="watchTitle"></div>
+      <div class="s"><span id="watchOwner"></span><span>👥 <b id="watchViewers"></b> смотрят</span></div>
+    </div>
+    <div class="spacer"></div>
+    <span class="live-dot" style="width:10px;height:10px"></span>
+  </div>
+  <div class="watch-wrap">
+    <div class="player-col">
+      <div class="player">
+        <div class="pl-badge">LIVE</div>
+        <div class="pl-timer" id="plTimer">00:00:00</div>
+        <video id="player" controls playsinline></video>
+      </div>
+      <div class="gifts-row">
+        <button class="gift" onclick="gift('🌹', 'Роза')">🌹 Роза</button>
+        <button class="gift" onclick="gift('🍕', 'Пицца')">🍕 Пицца</button>
+        <button class="gift" onclick="gift('🚀', 'Ракета')">🚀 Ракета</button>
+        <button class="gift" onclick="gift('💎', 'Алмаз')">💎 Алмаз</button>
+        <button class="gift" onclick="toast('Донаты в демо-версии отключены 💸')">💰 Поддержать</button>
+      </div>
+    </div>
+    <div class="chat-col">
+      <div class="ch-head">Чат эфира <span id="watchChatCount" style="color:var(--muted); font-weight:400; font-size:12px"></span></div>
+      <div class="watch-msgs" id="watchMsgs"></div>
+      <div class="composer" style="border-top:none">
+        <input id="watchInput" type="text" placeholder="Сообщение…" onkeydown="if(event.key==='Enter')sendWatchMsg()"/>
+        <button class="send" onclick="sendWatchMsg()">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LOGIN MODAL ============ -->
+<div class="modal-bg" id="loginBg" onclick="if(event.target===this)closeLogin()">
+  <div class="modal">
+    <h3>Вход в Ливачу</h3>
+    <p>Демо-режим: без пароля, аккаунт живёт только в этом браузере.</p>
+    <input id="loginName" type="text" maxlength="20" placeholder="Ваше имя" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <div class="color-row" id="colorRow"></div>
+    <button class="btn" onclick="doLogin()">Войти</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<script>
+'use strict';
+/* ================= data ================= */
+const GRADS = [
+  'linear-gradient(135deg,#1e3c2f,#0f2018)', 'linear-gradient(135deg,#2c3e50,#1a252f)',
+  'linear-gradient(135deg,#4a235a,#2c1533)', 'linear-gradient(135deg,#7e5109,#3d2a05)',
+  'linear-gradient(135deg,#154360,#0c2333)', 'linear-gradient(135deg,#641e16,#33100c)',
+  'linear-gradient(135deg,#1a5276,#0e2a3a)', 'linear-gradient(135deg,#4d5624,#262b12)',
+];
+const AVA_COLORS = ['#e74c3c','#9b59b6','#3498db','#f39c12','#1abc9c','#e67e22','#2ecc71','#e84393'];
+const STREAMS = [
+  {id:'s1', title:'иНВеЛиЧаВыЙ♛ — живой эфир', owner:'ливача', start:30*60, viewers:12, emoji:'🎧', grad:0, url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'},
+  {id:'s2', title:'В лабиринтах пантон', owner:'Carlson Pantone', start:10*3600+17*60, viewers:15, emoji:'🎨', grad:2, url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'},
+  {id:'s3', title:'Заказал компрессор и фрезерный станок', owner:'Никита Пантелеевчъ', start:3*3600+48*60, viewers:9, emoji:'🔧', grad:3, url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'},
+  {id:'s4', title:'Просто дома', owner:'Юрий Смолинский', start:29*60, viewers:4, emoji:'🏠', grad:1, url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'},
+  {id:'s5', title:'Уроки английского', owner:'English_Helper', start:1*60, viewers:2, emoji:'🇬🇧', grad:4, url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'},
+  {id:'s6', title:'Лучший Москва — ночной разговор', owner:'Лучший Москва', start:2*3600+33*60, viewers:7, emoji:'🌃', grad:6, url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'},
+];
+const CHATS = [
+  {id:'c1', title:'эфир под кефир', owner:'Танцы', viewers:2, online:true, emoji:'🥛', grad:0},
+  {id:'c2', title:'Зачот Зачот', owner:'Декабрина', viewers:21, online:true, emoji:'🔥', grad:1},
+  {id:'c3', title:'Борьба с урожаем и подарками', owner:'Вязальный Пепелац', viewers:11, online:true, emoji:'🎁', grad:2},
+  {id:'c4', title:'по игре случая', owner:'Ярослав Бобков', viewers:46, online:true, emoji:'🎲', grad:3},
+  {id:'c5', title:'Сплетникам и балаболам вход запрещён', owner:'г@л@в@л@м@чк@', viewers:40, online:true, emoji:'🚫', grad:4},
+  {id:'c6', title:'Палата номер шесть', owner:'Доктoр', viewers:8, online:true, emoji:'🏥', grad:5},
+  {id:'c7', title:'Собираю на сигареты', owner:'Алeксeй44', viewers:9, online:true, emoji:'💸', grad:6},
+  {id:'c8', title:'Пожарил баклажан', owner:'BooMeR254', viewers:4, online:true, emoji:'🍆', grad:7},
+  {id:'c9', title:'Птички', owner:'Феликс', viewers:2, online:true, emoji:'🐦', grad:0},
+  {id:'c10', title:'Крым', owner:'Артем', viewers:4, online:true, emoji:'🏖️', grad:1},
+  {id:'c11', title:'Котёнок', owner:'Кескюла', viewers:6, online:true, emoji:'🐱', grad:2},
+  {id:'c12', title:'Эвтерпа', owner:'Юлия Александрович1985', viewers:3, online:true, emoji:'📯', grad:3},
+  {id:'c13', title:'Всем доброго дня и вечера', owner:'Astana 13', viewers:17, online:false, emoji:'🌇', grad:4},
+  {id:'c14', title:'На пижамку', owner:'Окс', viewers:14, online:false, emoji:'🛌', grad:5},
+  {id:'c15', title:'Спонтанная беседа', owner:'Malkovich', viewers:5, online:false, emoji:'💬', grad:6},
+  {id:'c16', title:'Клуб любителей тишины', owner:'Тихон', viewers:1, online:false, emoji:'🤫', grad:7},
+  {id:'c17', title:'Вечерний караоке', owner:'Лариса Петровна', viewers:12, online:false, emoji:'🎤', grad:0},
+  {id:'c18', title:'Про машины и не только', owner:'Шустрик', viewers:23, online:false, emoji:'🚗', grad:1},
+  {id:'c19', title:'Готовим суп', owner:'Кухарка', viewers:7, online:false, emoji:'🍲', grad:2},
+  {id:'c20', title:'Философия дивана', owner:'Мудрец', viewers:3, online:false, emoji:'🛋️', grad:3},
+];
+const REPLIES = [
+  'ахах, точно 😄','ну это надо видеть','согласен','а что было дальше?','звучит круто 🔥',
+  'я тут новенький, привет всем!','ахах😂😂','не поверю, пока не увижу','класс!','ого, серьёзно?',
+  'да ладно вам','поддерживаю','а я думал иначе','вот это поворот','мощь 🔥🔥🔥',
+  'привет всем в чате!','как вам эфир?','первый раз тут','классный разговор','ахахах',
+];
+const CHAT_SEED = [
+  ['привет всем 👋','как настрой?','кто сегодня первый тут?','ахах, здравствуйте'],
+  ['всем привет!','чё как дела?','зачем вы тут собрались 😄','ну тут и собрались'],
+  ['ого, сколько людей','привет, я новенький','как звук у вас?','у нас норм, входим во вкус'],
+];
+
+/* ================= state ================= */
+let USER = null;
+try { USER = JSON.parse(localStorage.getItem('livacha_user') || 'null'); } catch {}
+let filter = 'all';
+let curRoom = null, roomMsgs = [];
+let curStream = null, watchMsgs = [], hlsInstance = null, watchTimer = null, watchChatIv = null;
+let pickedColor = AVA_COLORS[Math.floor(Math.random()*AVA_COLORS.length)];
+
+/* ================= utils ================= */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ava = (name, i) => {
+  const c = AVA_COLORS[(name.length * 7 + (i||0)) % AVA_COLORS.length];
+  return `<span class="avatar" style="background:${c}">${esc(name[0]||'?').toUpperCase()}</span>`;
+};
+const fmtDur = (sec) => {
+  sec = Math.max(0, Math.floor(sec));
+  const h = String(Math.floor(sec/3600)).padStart(2,'0');
+  const m = String(Math.floor(sec%3600/60)).padStart(2,'0');
+  const s = String(sec%60).padStart(2,'0');
+  return `${h}:${m}:${s}`;
+};
+const nowSec = () => Math.floor(Date.now()/1000);
+function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),2600); }
+
+/* ================= views ================= */
+function show(id){ document.querySelectorAll('.view').forEach(v=>v.classList.remove('on')); $(id).classList.add('on'); }
+function goHome(){ leaveWatch(); show('view-home'); renderHome(); window.scrollTo(0,0); }
+function setFilter(f){
+  filter=f;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on', b.dataset.f===f));
+  renderHome();
+}
+function renderUserBox(){
+  if(USER){
+    $('userBox').innerHTML = `<div class="userchip" onclick="logout()" title="Нажмите, чтобы выйти">
+      <span class="avatar" style="background:${USER.color}">${esc(USER.name[0]).toUpperCase()}</span>${esc(USER.name)}</div>`;
+    const mc = $('myChats');
+    if(mc) mc.innerHTML = CHATS.slice(0,3).map(c=>
+      `<div class="side-item" onclick="openChat('${c.id}')"><span class="dot" style="background:${c.online?'var(--green2)':'#3a4654'}"></span><span class="n">${esc(c.title)}</span><span class="v">${c.viewers}</span></div>`).join('')
+      + `<div class="empty-note" style="margin-top:8px">+ ещё ${CHATS.length-3} чата…</div>`;
+  } else {
+    $('userBox').innerHTML = `<button class="btn" onclick="openLogin()">Войти</button>`;
+    const mc = $('myChats');
+    if(mc) mc.innerHTML = 'Вы ещё не входили.<br/>Нажмите «Войти» сверху — и чаты появятся здесь.';
+  }
+}
+function renderHome(){
+  const q = ($('q').value||'').trim().toLowerCase();
+  const streams = STREAMS.filter(s => !q || (s.title+' '+s.owner).toLowerCase().includes(q));
+  const chats = CHATS.filter(c => {
+    if(q && !(c.title+' '+c.owner).toLowerCase().includes(q)) return false;
+    if(filter==='online') return c.online;
+    if(filter==='offline') return !c.online;
+    return true;
+  });
+  $('streamsCount').textContent = `— ${streams.length} в эфире`;
+  $('chatsCount').textContent = `— найдено: ${chats.length}`;
+  $('streamsRow').innerHTML = streams.map((s,i)=>`
+    <div class="s-card" onclick="openWatch('${s.id}')">
+      <div class="s-cover" style="background:${GRADS[s.grad]}">
+        <span class="live">LIVE</span>
+        <span>${s.emoji}</span>
+        <span class="dur" data-start="${s.start}">00:00:00</span>
+        <span class="viewers">👥 ${s.viewers}</span>
+      </div>
+      <div class="s-info"><div class="t">${esc(s.title)}</div><div class="o">${ava(s.owner,i)} ${esc(s.owner)}</div></div>
+    </div>`).join('');
+  $('chatsGrid').innerHTML = chats.map((c,i)=>`
+    <div class="c-card" onclick="openChat('${c.id}')">
+      <div class="c-cover" style="background:${GRADS[c.grad]}">
+        <span>${c.emoji}</span>
+        <span class="badge ${c.online?'on':''}">${c.online? c.viewers+' онлайн':'офлайн'}</span>
+      </div>
+      <div class="c-info"><div class="t">${esc(c.title)}</div><div class="o">владелец: ${esc(c.owner)}</div></div>
+    </div>`).join('');
+  $('topStreams').innerHTML = [...STREAMS].sort((a,b)=>b.viewers-a.viewers).slice(0,4).map((s,i)=>
+    `<div class="side-item" onclick="openWatch('${s.id}')"><span class="dot" style="background:var(--red)"></span><span class="n">${esc(s.title)}</span><span class="v">👥 ${s.viewers}</span></div>`).join('');
+  tickDurations();
+}
+function tickDurations(){
+  const t = nowSec();
+  document.querySelectorAll('[data-start]').forEach(el=>{ el.textContent = fmtDur(t - (+el.dataset.start)); });
+}
+setInterval(()=>{
+  tickDurations();
+  if(curStream){ const el=$('plTimer'); if(el) el.textContent = fmtDur(nowSec()-curStream.start); }
+  // «живые» счётчики
+  if(Math.random()<0.3){
+    const n = +$('onlineNum').textContent + (Math.random()<0.5?-1:1);
+    $('onlineNum').textContent = Math.min(210, Math.max(160, n));
+  }
+}, 1000);
+
+/* ================= login ================= */
+function openLogin(){
+  $('loginBg').classList.add('on');
+  $('loginName').value = USER ? USER.name : '';
+  renderColors();
+  setTimeout(()=>$('loginName').focus(), 50);
+}
+function renderColors(){
+  $('colorRow').innerHTML = AVA_COLORS.map(c=>
+    `<span data-c="${c}" class="${c===pickedColor?'on':''}" style="background:${c}" onclick="pickColor('${c}')"></span>`).join('');
+}
+function pickColor(c){ pickedColor=c; renderColors(); }
+function closeLogin(){ $('loginBg').classList.remove('on'); }
+function doLogin(){
+  const name = $('loginName').value.trim();
+  if(!name){ $('loginName').focus(); return; }
+  USER = {name, color: pickedColor};
+  localStorage.setItem('livacha_user', JSON.stringify(USER));
+  closeLogin(); renderUserBox(); toast(`Добро пожаловать, ${name}! 🎉`);
+}
+function logout(){
+  USER = null; localStorage.removeItem('livacha_user');
+  renderUserBox(); toast('Вы вышли из аккаунта');
+}
+
+/* ================= chat room ================= */
+function openChat(id){
+  const c = CHATS.find(x=>x.id===id); if(!c) return;
+  curRoom = c;
+  $('roomTitle').textContent = c.title;
+  $('roomOwner').textContent = c.owner;
+  $('roomViewers').textContent = c.viewers;
+  const seed = CHAT_SEED[(c.viewers + c.title.length) % CHAT_SEED.length];
+  const t0 = nowSec() - (10 + c.viewers*30);
+  const names = [c.owner, 'Гость'+(10+ (c.title.length*7)%89), 'Мирон', 'Ольга П.', 'Санёк'];
+  roomMsgs = seed.map((txt,i)=>({who:names[i%names.length], txt, tm: t0 + i*90}));
+  renderMsgs();
+  show('view-room');
+}
+function renderMsgs(){
+  $('msgs').innerHTML = roomMsgs.map(m=>{
+    if(m.sys) return `<div class="msg sys"><div class="body">${esc(m.txt)}</div></div>`;
+    const me = USER && m.who===USER.name;
+    return `<div class="msg ${me?'me':''}">
+      <span class="avatar" style="background:${me?USER.color:AVA_COLORS[m.who.length%AVA_COLORS.length]}">${esc(m.who[0]).toUpperCase()}</span>
+      <div><div class="meta"><b>${esc(m.who)}</b><span>${new Date(m.tm*1000).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</span></div>
+      <div class="body">${esc(m.txt)}</div></div>
+    </div>`;
+  }).join('');
+  $('msgs').scrollTop = $('msgs').scrollHeight;
+}
+function sendMsg(){
+  const inp = $('msgInput'); const t = inp.value.trim(); if(!t) return;
+  if(!USER){ openLogin(); toast('Войдите, чтобы писать в чат'); return; }
+  inp.value='';
+  roomMsgs.push({who:USER.name, txt:t, tm:nowSec()});
+  renderMsgs();
+  // авто-ответ собеседника
+  const c = curRoom;
+  setTimeout(()=>{
+    if(curRoom!==c) return;
+    const names = [c.owner, 'Гость'+(10+(c.title.length*7)%89), 'Мирон'];
+    roomMsgs.push({who: names[Math.floor(Math.random()*names.length)], txt: REPLIES[Math.floor(Math.random()*REPLIES.length)], tm:nowSec()});
+    renderMsgs();
+  }, 1200 + Math.random()*2600);
+}
+function addSmile(){
+  const inp=$('msgInput'); const s=['😊','🔥','😂','👍','❤️','🎉'];
+  inp.value += (inp.value ? ' ' : '') + s[Math.floor(Math.random()*s.length)];
+  inp.focus();
+}
+function leaveRoom(){ goHome(); }
+
+/* ================= watch ================= */
+function openWatch(id){
+  const s = STREAMS.find(x=>x.id===id); if(!s) return;
+  curStream = s;
+  $('watchTitle').textContent = s.title;
+  $('watchOwner').innerHTML = `${ava(s.owner, 3)} ${esc(s.owner)}`;
+  $('watchViewers').textContent = s.viewers;
+  $('plTimer').textContent = fmtDur(nowSec()-s.start);
+  watchMsgs = [
+    {who:'Гость22', txt:'привет всем в эфире 👋'},
+    {who:s.owner, txt:'всем привет! добро пожаловать'},
+    {who:'Мирон', txt:'звучит/выглядит отлично'},
+    {who:'Ольга П.', txt:'зашла со старого друга, рада видеть'},
+  ].map((m,i)=>({...m, tm: nowSec()-300+i*60}));
+  renderWatchMsgs();
+  show('view-watch');
+  startHls(s.url);
+  const names=[s.owner,'Гость22','Мирон','Ольга П.','Санёк'];
+  watchChatIv = setInterval(()=>{
+    if(Math.random()<0.55){
+      watchMsgs.push({who:names[Math.floor(Math.random()*names.length)], txt:REPLIES[Math.floor(Math.random()*REPLIES.length)], tm:nowSec()});
+      if(watchMsgs.length>120) watchMsgs.shift();
+      renderWatchMsgs();
+    }
+  }, 4200);
+}
+function renderWatchMsgs(){
+  const colors = {};
+  $('watchMsgs').innerHTML = watchMsgs.map(m=>{
+    if(!colors[m.who]) colors[m.who] = AVA_COLORS[(m.who.length*5)%AVA_COLORS.length];
+    const me = USER && m.who===USER.name;
+    return `<div class="wmsg"><span class="tm">${new Date(m.tm*1000).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</span><b style="color:${me?USER.color:colors[m.who]}">${esc(m.who)}:</b> ${esc(m.txt)}</div>`;
+  }).join('');
+  $('watchMsgs').scrollTop = $('watchMsgs').scrollHeight;
+  $('watchChatCount').textContent = `· ${watchMsgs.length} сообщений`;
+}
+function sendWatchMsg(){
+  const inp=$('watchInput'); const t=inp.value.trim(); if(!t) return;
+  inp.value='';
+  const who = USER ? USER.name : 'Гость'+(10+Math.floor(Math.random()*89));
+  watchMsgs.push({who, txt:t, tm:nowSec()});
+  renderWatchMsgs();
+}
+function gift(emoji, name){
+  const who = USER ? USER.name : 'Гость';
+  watchMsgs.push({who, txt:`отправил(а) ${emoji} ${name} стримеру!`, tm:nowSec(), gift:true});
+  renderWatchMsgs();
+  toast(`${emoji} ${name} — принято!`);
+}
+function startHls(url){
+  const v = $('player');
+  if(hlsInstance){ hlsInstance.destroy(); hlsInstance=null; }
+  v.removeAttribute('src'); v.load();
+  if(window.Hls && Hls.isSupported()){
+    hlsInstance = new Hls({maxBufferLength: 30});
+    hlsInstance.loadSource(url);
+    hlsInstance.attachMedia(v);
+    hlsInstance.on(Hls.Events.MANIFEST_PARSED, ()=>v.play().catch(()=>{}));
+    hlsInstance.on(Hls.Events.ERROR, (e, d)=>{ if(d.fatal){ toast('Ошибка потока: '+d.type+', пробуем другой…'); switchStream(); } });
+  } else if(v.canPlayType('application/vnd.apple.mpegurl')){
+    v.src = url; v.play().catch(()=>{});
+  } else {
+    toast('HLS не поддерживается этим браузером');
+  }
+}
+function switchStream(){
+  if(!curStream) return;
+  const urls = STREAMS.map(s=>s.url);
+  const alt = urls.find(u=>u!==curStream.url) || 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+  curStream.url = alt; startHls(alt);
+}
+function leaveWatch(){
+  if(watchChatIv){ clearInterval(watchChatIv); watchChatIv=null; }
+  if(hlsInstance){ hlsInstance.destroy(); hlsInstance=null; }
+  const v=$('player'); v.pause(); v.removeAttribute('src'); v.load();
+  curStream=null;
+  goHome();
+}
+
+/* ================= init ================= */
+renderUserBox();
+renderHome();
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ if($('loginBg').classList.contains('on')) closeLogin(); } });
+</script>
+</body>
+</html>
