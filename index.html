@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Ливача — частные онлайн стримы</title>
+<title>Ливача — видеочат</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%237c5cff'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>Л</text></svg>"/>
 <style>
 :root{
   --bg:#0a0d1c; --bg2:#111530; --card:#171c38; --card2:#1f2547;
-  --line:#2c3560; --text:#eef1fc; --muted:#98a1c4; --green:#7c5cff; --green2:#a78bfa;
-  --red:#e74c3c; --radius:16px;
+  --line:#2c3560; --text:#eef1fc; --muted:#98a1c4; --accent:#7c5cff; --accent2:#a78bfa;
+  --red:#e74c3c; --green:#2ecc71; --radius:16px;
 }
 *{box-sizing:border-box; margin:0; padding:0}
 html,body{height:100%}
@@ -17,14 +17,13 @@ body{
   background:var(--bg); color:var(--text);
   font-family:Roboto,-apple-system,'Segoe UI',Arial,sans-serif;
   overflow-x:hidden;
-  padding-bottom:40px; /* под бегущую строку */
   background-image:
     radial-gradient(1000px 460px at 85% -100px, rgba(124,92,255,.30), transparent 65%),
     radial-gradient(760px 400px at 6% -80px, rgba(34,211,238,.14), transparent 60%);
   background-repeat:no-repeat;
   background-attachment:fixed;
 }
-a{color:var(--green2); text-decoration:none}
+a{color:var(--accent2); text-decoration:none}
 button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit}
 ::-webkit-scrollbar{width:8px; height:8px}
 ::-webkit-scrollbar-thumb{background:#3a4370; border-radius:8px}
@@ -36,394 +35,227 @@ header{
   padding:10px 16px; background:rgba(10,13,28,.82); backdrop-filter:blur(14px);
   border-bottom:1px solid var(--line);
 }
-.logo{display:flex; align-items:center; gap:9px; font-size:21px; font-weight:700; letter-spacing:.3px; cursor:pointer; white-space:nowrap}
+.logo{display:flex; align-items:center; gap:9px; font-size:21px; font-weight:700; letter-spacing:.3px; white-space:nowrap}
 .logo-badge{width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #b18cff, #5b21b6 70%);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;box-shadow:0 0 14px rgba(124,92,255,.6)}
 .logo small{font-size:9px;color:var(--muted);font-weight:400;vertical-align:super}
-.tabs{display:flex; gap:4px; background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:3px}
-.tabs button{padding:7px 14px; border-radius:8px; font-size:14px; color:var(--muted); transition:.15s}
-.tabs button.on{background:var(--green); color:#fff}
-.tabs button:not(.on):hover{color:var(--text)}
-.search{flex:1; max-width:420px; position:relative}
-.search input{
-  width:100%; padding:9px 14px 9px 36px; border-radius:10px; border:1px solid var(--line);
-  background:var(--bg2); color:var(--text); font-size:14px; outline:none; transition:.15s;
+.logo .sub{font-size:12px; color:var(--muted); font-weight:500; margin-left:2px}
+.chip{
+  display:flex; align-items:center; gap:7px; margin-left:auto;
+  font-size:12.5px; color:var(--muted); background:var(--bg2); border:1px solid var(--line);
+  padding:6px 12px; border-radius:999px; white-space:nowrap;
 }
-.search input:focus{border-color:var(--green)}
-.search::before{content:"🔍"; position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:13px; opacity:.6}
-.spacer{flex:1}
+.chip .dot{width:8px; height:8px; border-radius:50%; background:#5a6488; flex:none}
+.chip.ok .dot{background:var(--green); box-shadow:0 0 8px rgba(46,204,113,.8)}
+.chip.bad .dot{background:var(--red)}
+
+/* ---------- layout ---------- */
+.view{display:none}
+.view.on{display:block}
+.wrap{max-width:1080px; margin:0 auto; padding:26px 16px 40px}
+
+/* ---------- lobby ---------- */
+.hero{
+  background:var(--card); border:1px solid var(--line); border-radius:20px;
+  padding:34px 30px; text-align:center; box-shadow:0 18px 60px rgba(0,0,0,.35);
+}
+.hero h1{font-size:26px; margin-bottom:8px; background:linear-gradient(90deg,#cfc6ff,#7cd9ff); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+.hero .lead{color:var(--muted); font-size:14.5px; margin-bottom:26px; line-height:1.55}
+.code-box{
+  display:flex; align-items:center; justify-content:center; gap:12px;
+  background:var(--bg2); border:1px solid var(--line); border-radius:14px;
+  padding:16px 18px; margin-bottom:18px; flex-wrap:wrap;
+}
+.code-box .lbl{font-size:12px; color:var(--muted); letter-spacing:.8px; text-transform:uppercase}
+.code-box .code{font-size:30px; font-weight:800; letter-spacing:6px; color:var(--accent2); font-family:Consolas,Menlo,monospace}
+.code-box button{
+  padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600;
+  background:var(--card2); border:1px solid var(--line); transition:.15s;
+}
+.code-box button:hover{border-color:var(--accent)}
+.call-row{display:flex; gap:10px; max-width:520px; margin:0 auto; flex-wrap:wrap}
+.call-row input{
+  flex:1; min-width:180px; padding:12px 15px; border-radius:12px; border:1px solid var(--line);
+  background:var(--bg2); color:var(--text); font-size:16px; letter-spacing:3px; text-align:center;
+  text-transform:uppercase; font-family:Consolas,Menlo,monospace; outline:none; transition:.15s;
+}
+.call-row input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(124,92,255,.18)}
 .btn{
-  display:inline-flex; align-items:center; gap:7px;
-  padding:9px 18px; border-radius:10px; font-size:14px; font-weight:600;
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  padding:12px 22px; border-radius:12px; font-size:15px; font-weight:700;
   background:linear-gradient(135deg,#8b5cf6,#5b21b6); color:#fff; transition:.15s;
   box-shadow:0 4px 18px rgba(124,92,255,.28);
 }
 .btn:hover{background:linear-gradient(135deg,#9d71ff,#6d28d9)}
-.btn.ghost{background:var(--bg2); border:1px solid var(--line); color:var(--text)}
-.btn.ghost:hover{border-color:var(--green)}
-.userchip{display:flex; align-items:center; gap:8px; padding:5px 12px 5px 5px; border-radius:12px; background:var(--bg2); border:1px solid var(--line); font-size:14px; font-weight:600; cursor:pointer}
-.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex:none}
-
-/* ---------- layout ---------- */
-.layout{display:flex; gap:18px; max-width:1280px; margin:0 auto; padding:18px 16px; align-items:flex-start}
-.main-col{flex:1; min-width:0}
-.sidebar{width:300px; flex:none; display:flex; flex-direction:column; gap:14px; position:sticky; top:70px}
-.sec-title{display:flex; align-items:center; gap:9px; font-size:17px; font-weight:700; margin:20px 0 12px}
-.sec-title:first-child{margin-top:2px}
-.sec-title .count{font-size:12px; color:var(--muted); font-weight:400}
-.live-dot{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 rgba(231,76,60,.7);animation:pulse 1.6s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(231,76,60,.6)}70%{box-shadow:0 0 0 9px rgba(231,76,60,0)}100%{box-shadow:0 0 0 0 rgba(231,76,60,0)}}
-
-/* ---------- stream cards ---------- */
-.streams-row{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px}
-.s-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:.15s}
-.s-card:hover{transform:translateY(-3px); border-color:var(--green); box-shadow:0 10px 28px rgba(124,92,255,.18)}
-.s-cover{position:relative; height:120px; display:flex; align-items:center; justify-content:center; font-size:46px}
-.s-cover .live{
-  position:absolute; top:9px; left:9px; background:var(--red); color:#fff;
-  font-size:11px; font-weight:700; padding:3px 9px; border-radius:6px; display:flex; gap:5px; align-items:center;
+.btn:disabled{opacity:.5; cursor:not-allowed}
+.btn.danger{background:linear-gradient(135deg,#e74c3c,#96281b); box-shadow:0 4px 18px rgba(231,76,60,.25)}
+.status-line{margin-top:20px; font-size:13.5px; color:var(--muted); min-height:20px}
+.err{
+  margin-top:12px; font-size:13.5px; color:#ff8a7a; background:rgba(231,76,60,.1);
+  border:1px solid rgba(231,76,60,.35); border-radius:12px; padding:10px 14px; line-height:1.5;
+  display:none;
 }
-.s-cover .live::before{content:""; width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1s infinite}
-@keyframes blink{50%{opacity:.25}}
-.s-cover .dur{
-  position:absolute; bottom:9px; right:9px; background:rgba(0,0,0,.75); color:#fff;
-  font-size:12px; font-weight:600; padding:2px 8px; border-radius:6px; font-variant-numeric:tabular-nums;
+.err.on{display:block}
+.tips{margin-top:26px; display:grid; gap:8px}
+.tip{font-size:12.5px; color:var(--muted); background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:9px 13px; line-height:1.5}
+.tip b{color:var(--text); font-weight:600}
+
+/* ---------- call ---------- */
+.call-grid{display:grid; grid-template-columns:1fr 330px; gap:14px; height:calc(100vh - 62px - 76px - 56px)}
+.stage-col{display:flex; flex-direction:column; gap:12px; min-width:0}
+.stage{
+  position:relative; flex:1; min-height:300px; background:#05060d;
+  border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
 }
-.s-cover .viewers{
-  position:absolute; bottom:9px; left:9px; background:rgba(0,0,0,.75); color:#fff;
-  font-size:12px; padding:2px 8px; border-radius:6px;
+.stage video{width:100%; height:100%; object-fit:contain; display:block}
+.stage video.self{
+  position:absolute; right:12px; bottom:12px; width:170px; height:114px; object-fit:cover;
+  border-radius:12px; border:1px solid var(--line); background:#000; z-index:5;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
 }
-.s-info{padding:10px 12px}
-.s-info .t{font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.s-info .o{font-size:12px; color:var(--muted); margin-top:3px; display:flex; align-items:center; gap:6px}
-
-/* ---------- chat cards ---------- */
-.chats-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:12px}
-.c-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:.15s}
-.c-card:hover{transform:translateY(-3px); border-color:var(--green); box-shadow:0 10px 28px rgba(124,92,255,.18)}
-.c-cover{position:relative; height:100px; display:flex; align-items:center; justify-content:center; font-size:40px}
-.c-cover .badge{
-  position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.7); color:#fff;
-  font-size:11.5px; font-weight:600; padding:2px 8px; border-radius:6px; display:flex; gap:5px; align-items:center;
+.stage .placeholder{
+  position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:10px; color:var(--muted); font-size:14px; background:radial-gradient(ellipse at center, rgba(124,92,255,.08), transparent 70%);
 }
-.c-cover .badge.on::before{content:""; width:7px;height:7px;border-radius:50%;background:var(--green2)}
-.c-info{padding:9px 11px}
-.c-info .t{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.c-info .o{font-size:11.5px; color:var(--muted); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-
-/* ---------- sidebar ---------- */
-.side-block{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px}
-.side-block h4{font-size:14px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px}
-.side-item{display:flex; align-items:center; gap:9px; padding:8px; border-radius:9px; cursor:pointer; font-size:13.5px}
-.side-item:hover{background:var(--card2)}
-.side-item .dot{width:8px;height:8px;border-radius:50%;flex:none}
-.side-item .n{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500}
-.side-item .v{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums}
-.online-box{display:flex; align-items:center; justify-content:space-between}
-.online-box .num{font-size:26px; font-weight:800; color:var(--green2); font-variant-numeric:tabular-nums}
-.empty-note{font-size:13px; color:var(--muted); line-height:1.5}
-
-/* ---------- views ---------- */
-.view{display:none}
-.view.on{display:block}
-.topbar{
-  display:flex; align-items:center; gap:12px; padding:10px 16px;
-  border-bottom:1px solid var(--line); background:var(--bg2); position:sticky; top:52px; z-index:40;
+.stage .placeholder .big{font-size:44px}
+.stage .conn-tag{
+  position:absolute; top:12px; left:12px; z-index:5;
+  background:rgba(5,6,13,.75); border:1px solid var(--line); border-radius:8px;
+  font-size:12px; padding:5px 11px; color:var(--muted); backdrop-filter:blur(6px);
 }
-.topbar .back{width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--line);font-size:17px;flex:none}
-.topbar .back:hover{border-color:var(--green)}
-.topbar .tt{min-width:0}
-.topbar .tt .t{font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.topbar .tt .s{font-size:12px; color:var(--muted); display:flex; gap:10px; align-items:center}
-.dotg{width:8px;height:8px;border-radius:50%;background:var(--green2);display:inline-block}
+.stage .conn-tag.ok{color:#7dedaa; border-color:rgba(46,204,113,.4)}
+.call-bar{
+  display:flex; align-items:center; gap:10px; background:var(--card);
+  border:1px solid var(--line); border-radius:var(--radius); padding:10px 14px;
+}
+.cbtn{
+  width:46px; height:46px; border-radius:12px; font-size:19px; flex:none;
+  background:var(--card2); border:1px solid var(--line); transition:.15s;
+  display:flex; align-items:center; justify-content:center;
+}
+.cbtn:hover{border-color:var(--accent)}
+.cbtn.off{background:rgba(231,76,60,.18); border-color:rgba(231,76,60,.5)}
+.cbtn.hang{
+  width:auto; padding:0 20px; font-size:14px; font-weight:700; gap:8px;
+  background:linear-gradient(135deg,#e74c3c,#96281b); box-shadow:0 4px 16px rgba(231,76,60,.25);
+}
+.call-time{margin-left:auto; font-size:14px; color:var(--muted); font-variant-numeric:tabular-nums}
+.call-peer{font-size:13px; color:var(--muted); letter-spacing:1px}
 
-/* ---------- room ---------- */
-.room-wrap{display:flex; flex-direction:column; height:calc(100vh - 52px - 61px)}
-.msgs{flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; background:radial-gradient(ellipse at top, rgba(124,92,255,.07), transparent 60%)}
-.msg{display:flex; gap:10px; max-width:75%; animation:fadein .2s}
-@keyframes fadein{from{opacity:0; transform:translateY(6px)}to{opacity:1}}
-.msg .body{background:var(--card2); border:1px solid var(--line); padding:8px 12px; border-radius:4px 14px 14px 14px; font-size:14px; line-height:1.45}
-.msg .meta{font-size:11.5px; color:var(--muted); margin-bottom:3px; display:flex; gap:8px}
-.msg .meta b{color:var(--green2); font-weight:600}
-.msg.me{align-self:flex-end; flex-direction:row-reverse}
-.msg.me .body{background:rgba(124,92,255,.22); border-color:rgba(124,92,255,.45); border-radius:14px 4px 14px 14px}
-.msg.me .meta{justify-content:flex-end}
-.msg.sys{align-self:center; max-width:100%}
-.msg.sys .body{background:none; border:none; color:var(--muted); font-size:12px; padding:2px}
-.composer{display:flex; gap:9px; padding:12px 16px; border-top:1px solid var(--line); background:var(--bg2); align-items:center}
-.composer input{flex:1; padding:11px 15px; border-radius:11px; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:14px; outline:none}
-.composer input:focus{border-color:var(--green)}
-.composer .send{width:42px;height:42px;border-radius:11px;background:var(--green);font-size:17px;flex:none}
-.composer .send:hover{background:var(--green2)}
-.icon-btn{width:42px;height:42px;border-radius:11px;background:var(--card);border:1px solid var(--line);font-size:18px;flex:none}
-.icon-btn:hover{border-color:var(--green)}
-
-/* ---------- watch ---------- */
-.watch-wrap{display:grid; grid-template-columns:1fr 330px; gap:0; height:calc(100vh - 52px - 61px)}
-.player-col{display:flex; flex-direction:column; min-width:0; border-right:1px solid var(--line)}
-.player{flex:1; background:#000; position:relative; min-height:240px}
-.player video{width:100%; height:100%; object-fit:contain; display:block}
-.player .pl-badge{position:absolute; top:12px; left:12px; background:var(--red); color:#fff; font-size:12px; font-weight:700; padding:4px 11px; border-radius:7px; display:flex; gap:6px; align-items:center; z-index:5}
-.player .pl-badge::before{content:"";width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s infinite}
-.player .pl-timer{position:absolute; top:12px; left:100px; background:rgba(0,0,0,.65); color:#fff; font-size:12px; padding:4px 10px; border-radius:7px; font-variant-numeric:tabular-nums; z-index:5}
-.chat-col{display:flex; flex-direction:column; min-width:0}
-.chat-col .ch-head{padding:11px 14px; border-bottom:1px solid var(--line); font-size:14px; font-weight:700; background:var(--bg2)}
-.watch-msgs{flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px}
-.wmsg{font-size:13.5px; line-height:1.4; animation:fadein .2s}
-.wmsg b{font-weight:600}
-.wmsg .tm{color:var(--muted); font-size:11px; margin-right:6px}
-.gifts-row{display:flex; gap:8px; padding:10px 14px; border-top:1px solid var(--line); background:var(--bg2); flex-wrap:wrap}
-.gift{padding:7px 13px; border-radius:9px; background:var(--card); border:1px solid var(--line); font-size:13px; transition:.15s}
-.gift:hover{border-color:var(--green); transform:translateY(-1px)}
-
-/* ---------- modal ---------- */
-.modal-bg{position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:100; display:none; align-items:center; justify-content:center; padding:16px}
-.modal-bg.on{display:flex}
-.modal{background:var(--bg2); border:1px solid var(--line); border-radius:18px; padding:24px; width:100%; max-width:360px; animation:fadein .2s}
-.modal h3{font-size:19px; margin-bottom:6px}
-.modal p{font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.5}
-.modal input{width:100%; padding:11px 14px; border-radius:11px; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:14px; outline:none; margin-bottom:12px}
-.modal input:focus{border-color:var(--green)}
-.color-row{display:flex; gap:9px; margin-bottom:16px}
-.color-row span{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.12s}
-.color-row span.on{border-color:#fff; transform:scale(1.12)}
-.modal .btn{width:100%; justify-content:center; padding:12px}
+/* ---------- chat panel ---------- */
+.chat-panel{
+  display:flex; flex-direction:column; min-height:0; min-width:0;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
+}
+.chat-head{padding:12px 14px; border-bottom:1px solid var(--line); font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px}
+.chat-head .n{font-size:12px; color:var(--muted); font-weight:400}
+.chat-msgs{flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:7px}
+.cmsg{font-size:13.5px; line-height:1.45; max-width:92%; padding:7px 11px; border-radius:11px; background:var(--card2); border:1px solid var(--line); word-break:break-word; animation:fadein .18s}
+.cmsg b{color:var(--accent2); font-weight:600}
+.cmsg .tm{color:var(--muted); font-size:11px; margin-right:6px}
+.cmsg.me{align-self:flex-end; background:rgba(124,92,255,.22); border-color:rgba(124,92,255,.45)}
+.cmsg.sys{align-self:center; background:none; border:none; color:var(--muted); font-size:12px; padding:2px}
+@keyframes fadein{from{opacity:0; transform:translateY(5px)}to{opacity:1}}
+.chat-input{display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--line); background:var(--bg2)}
+.chat-input input{
+  flex:1; padding:10px 13px; border-radius:10px; border:1px solid var(--line);
+  background:var(--card); color:var(--text); font-size:13.5px; outline:none;
+}
+.chat-input input:focus{border-color:var(--accent)}
+.chat-input button{
+  width:42px; height:42px; border-radius:10px; font-size:15px; flex:none;
+  background:linear-gradient(135deg,#8b5cf6,#5b21b6); color:#fff;
+}
 
 /* ---------- toast ---------- */
-#toast{position:fixed; bottom:56px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--card2); border:1px solid var(--green); color:var(--text); padding:11px 20px; border-radius:12px; font-size:14px; z-index:200; transition:.3s; opacity:0; max-width:90vw}
+#toast{
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(90px);
+  background:var(--card2); border:1px solid var(--accent); color:var(--text);
+  padding:11px 20px; border-radius:12px; font-size:13.5px; z-index:300;
+  transition:.3s; opacity:0; max-width:90vw; box-shadow:0 10px 34px rgba(0,0,0,.45);
+}
 #toast.on{transform:translateX(-50%) translateY(0); opacity:1}
 
-/* ---------- marquee (реклама) ---------- */
-#marquee{position:fixed; left:0; right:0; bottom:0; z-index:300; background:linear-gradient(90deg,#151a38 0%,#241b4d 45%,#3b2a7a 55%,#241b4d 75%,#151a38 100%); border-top:1px solid rgba(124,92,255,.55); overflow:hidden; white-space:nowrap; padding:8px 0; box-shadow:0 -6px 24px rgba(124,92,255,.15)}
-#marquee .track{display:inline-block; animation:marquee-scroll 14s linear infinite}
-#marquee .track span{display:inline-block; padding-left:100%; font-size:14px; font-weight:700; letter-spacing:.4px; color:#cfc6ff; text-shadow:0 0 10px rgba(124,92,255,.5)}
-@keyframes marquee-scroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}
-
 /* ---------- responsive ---------- */
-@media (max-width: 980px){
-  .sidebar{display:none}
-  .watch-wrap{grid-template-columns:1fr; grid-template-rows: 38vh 1fr; height:auto}
-  .player-col{border-right:none; border-bottom:1px solid var(--line)}
-  .chat-col{height:52vh}
-  .tabs{display:none}
-}
-@media (max-width: 640px){
-  header{flex-wrap:wrap}
-  .search{order:5; max-width:none; flex-basis:100%}
-  .msg{max-width:90%}
-}
-/* ---------- admin ---------- */
-.admin-gear{width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--line);font-size:16px;flex:none;opacity:.55;transition:.15s}
-.admin-gear:hover{opacity:1; border-color:var(--green)}
-.admin-wrap{display:flex; height:calc(100vh - 52px - 61px); max-width:1100px; margin:0 auto}
-.admin-tabs{width:180px; flex:none; border-right:1px solid var(--line); padding:14px 10px; display:flex; flex-direction:column; gap:6px; background:var(--bg2)}
-.admin-tabs button{text-align:left; padding:10px 12px; border-radius:9px; font-size:14px; color:var(--muted)}
-.admin-tabs button.on{background:var(--green); color:#fff}
-.admin-body{flex:1; overflow-y:auto; padding:18px; min-width:0}
-.atab{display:none}
-.atab.on{display:block}
-.atab h5{font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin:18px 0 10px}
-.atab h5:first-child{margin-top:0}
-.set-row{display:flex; gap:10px; align-items:center; margin-bottom:12px; max-width:600px}
-.set-row label{width:190px; font-size:13.5px; color:var(--muted); flex:none}
-.set-row input[type=text],.set-row input[type=number]{flex:1; padding:9px 12px; border-radius:9px; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:14px; outline:none}
-.set-row input[type=color]{width:46px; height:38px; border:1px solid var(--line); border-radius:8px; background:var(--card); padding:2px; cursor:pointer}
-.admin-row{display:flex; gap:8px; align-items:center; margin-bottom:9px; flex-wrap:wrap}
-.admin-row input{padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:13.5px; flex:1; min-width:100px; outline:none}
-.admin-row input[type=number]{width:70px; flex:none}
-.admin-row input[type=checkbox]{width:auto; flex:none}
-.admin-chk{font-size:12.5px; color:var(--muted); display:flex; gap:5px; align-items:center; flex:none}
-.admin-del{width:32px; height:32px; border-radius:8px; background:var(--card); border:1px solid var(--line); color:var(--red); flex:none; font-size:14px}
-.admin-del:hover{border-color:var(--red)}
-#scriptArea{width:100%; height:320px; resize:vertical; padding:12px; border-radius:10px; border:1px solid var(--line); background:#0b0e20; color:#b9a8ff; font-family:Consolas,Menlo,monospace; font-size:13px; outline:none; line-height:1.5}
-.hint{font-size:12.5px; color:var(--muted); margin-top:8px; line-height:1.55; max-width:720px}
-@media (max-width:760px){
-  .admin-wrap{flex-direction:column; height:auto}
-  .admin-tabs{width:100%; flex-direction:row; border-right:none; border-bottom:1px solid var(--line); flex-wrap:wrap}
+@media (max-width: 900px){
+  .call-grid{grid-template-columns:1fr; grid-template-rows:44vh auto auto; height:auto}
+  .stage{min-height:0}
+  .chat-panel{max-height:40vh}
+  .stage video.self{width:110px; height:74px; right:8px; bottom:8px}
+  .hero{padding:26px 18px}
+  .code-box .code{font-size:24px; letter-spacing:4px}
 }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo" onclick="goHome()">
+  <div class="logo">
     <span class="logo-badge">Л</span>
-    <span>Ливача<small>™</small></span>
+    <span>Ливача<small>™</small><span class="sub">видеочат</span></span>
   </div>
-  <nav class="tabs" id="tabs">
-    <button class="on" data-f="all" onclick="setFilter('all')">Чаты</button>
-    <button data-f="online" onclick="setFilter('online')">Online</button>
-    <button data-f="offline" onclick="setFilter('offline')">Офлайн</button>
-  </nav>
-  <div class="search"><input id="q" type="text" placeholder="Поиск чатов и стримов…" oninput="renderHome()"/></div>
-  <div class="spacer"></div>
-  <div id="userBox"></div>
-  <button class="admin-gear" title="Админ-панель" onclick="adminEntry()">⚙</button>
+  <div class="chip" id="sigChip"><span class="dot"></span><span id="sigText">сигнал: —</span></div>
 </header>
 
-<!-- ============ HOME ============ -->
-<div class="view on" id="view-home">
-  <div class="layout">
-    <div class="main-col">
-      <div class="sec-title"><span class="live-dot"></span> Эфир <span class="count" id="streamsCount"></span></div>
-      <div class="streams-row" id="streamsRow"></div>
-      <div class="sec-title">Чаты <span class="count" id="chatsCount"></span></div>
-      <div class="chats-grid" id="chatsGrid"></div>
-      <div style="text-align:center; padding:26px 0 8px">
-        <button class="btn ghost" onclick="toast('В демо-версии создание чатов отключено 🙃')">＋ Создать свой чат</button>
+<!-- ============ LOBBY ============ -->
+<div class="view on" id="view-lobby">
+  <div class="wrap">
+    <div class="hero">
+      <h1>Видеочат по веб-камере</h1>
+      <p class="lead">Покажите свой код собеседнику или введите его код.<br>Камера и микрофон включаются при звонке.</p>
+
+      <div class="code-box">
+        <span class="lbl">Ваш код</span>
+        <span class="code" id="myCode">……</span>
+        <button onclick="copyCode()" id="copyBtn">📋 Копировать</button>
+      </div>
+
+      <div class="call-row">
+        <input id="peerCode" type="text" placeholder="код собеседника" maxlength="24" autocomplete="off"/>
+        <button class="btn" id="callBtn" onclick="startCall()">📞 Позвонить</button>
+      </div>
+
+      <div class="status-line" id="statusLine">Подключаемся к серверу сигналинга…</div>
+      <div class="err" id="errBox"></div>
+
+      <div class="tips">
+        <div class="tip">📱 <b>Со смартфона на той же сети:</b> один раз откройте <a href="https://192.168.1.103:8443/">https://192.168.1.103:8443</a> и примите сертификат (он самоподписанный).</div>
+        <div class="tip">🖥 <b>Сигналинг-сервер</b> должен работать на ПК: папка <b>peer-server</b> → двойной клик <b>serve.bat</b>.</div>
       </div>
     </div>
-    <aside class="sidebar">
-      <div class="side-block online-box">
-        <div>
-          <h4 style="margin-bottom:2px">Сейчас на сайте</h4>
-          <div class="empty-note">зрители и авторы</div>
+  </div>
+</div>
+
+<!-- ============ CALL ============ -->
+<div class="view" id="view-call">
+  <div class="wrap">
+    <div class="call-grid">
+      <div class="stage-col">
+        <div class="stage">
+          <div class="placeholder" id="stagePh">
+            <div class="big">📡</div>
+            <div id="stagePhText">Ожидание ответа собеседника…</div>
+          </div>
+          <div class="conn-tag" id="connTag">соединяемся…</div>
+          <video id="remote" autoplay playsinline></video>
+          <video id="self" muted autoplay playsinline></video>
         </div>
-        <div class="num" id="onlineNum">186</div>
-      </div>
-      <div class="side-block">
-        <h4>📌 Мои чаты</h4>
-        <div class="empty-note" id="myChats">Вы ещё не входили.<br/>Нажмите «Войти» сверху — и чаты появятся здесь.</div>
-      </div>
-      <div class="side-block">
-        <h4>🔥 Топ стримов</h4>
-        <div id="topStreams"></div>
-      </div>
-    </aside>
-  </div>
-</div>
-
-<!-- ============ CHAT ROOM ============ -->
-<div class="view" id="view-room">
-  <div class="topbar">
-    <button class="back" onclick="goHome()">←</button>
-    <div class="tt">
-      <div class="t" id="roomTitle"></div>
-      <div class="s"><span><span class="dotg"></span> <span id="roomOwner"></span></span><span>👥 <b id="roomViewers"></b> в чате</span></div>
-    </div>
-    <div class="spacer"></div>
-    <button class="btn ghost" onclick="leaveRoom()">Выйти</button>
-  </div>
-  <div class="room-wrap">
-    <div class="msgs" id="msgs"></div>
-    <div class="composer">
-      <button class="icon-btn" title="Смайлик" onclick="addSmile()">😊</button>
-      <input id="msgInput" type="text" placeholder="Написать сообщение…" onkeydown="if(event.key==='Enter')sendMsg()"/>
-      <button class="icon-btn" title="Голосовое (демо)" onclick="toast('Голосовые сообщения в демо отключены 🎤')">🎤</button>
-      <button class="send" onclick="sendMsg()">➤</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============ WATCH ============ -->
-<div class="view" id="view-watch">
-  <div class="topbar">
-    <button class="back" onclick="leaveWatch()">←</button>
-    <div class="tt">
-      <div class="t" id="watchTitle"></div>
-      <div class="s"><span id="watchOwner"></span><span>👥 <b id="watchViewers"></b> смотрят</span></div>
-    </div>
-    <div class="spacer"></div>
-    <span class="live-dot" style="width:10px;height:10px"></span>
-  </div>
-  <div class="watch-wrap">
-    <div class="player-col">
-      <div class="player">
-        <div class="pl-badge">LIVE</div>
-        <div class="pl-timer" id="plTimer">00:00:00</div>
-        <video id="player" controls playsinline></video>
-      </div>
-      <div class="gifts-row">
-        <button class="gift" onclick="gift('🌹', 'Роза')">🌹 Роза</button>
-        <button class="gift" onclick="gift('🍕', 'Пицца')">🍕 Пицца</button>
-        <button class="gift" onclick="gift('🚀', 'Ракета')">🚀 Ракета</button>
-        <button class="gift" onclick="gift('💎', 'Алмаз')">💎 Алмаз</button>
-        <button class="gift" onclick="toast('Донаты в демо-версии отключены 💸')">💰 Поддержать</button>
-      </div>
-    </div>
-    <div class="chat-col">
-      <div class="ch-head">Чат эфира <span id="watchChatCount" style="color:var(--muted); font-weight:400; font-size:12px"></span></div>
-      <div class="watch-msgs" id="watchMsgs"></div>
-      <div class="composer" style="border-top:none">
-        <input id="watchInput" type="text" placeholder="Сообщение…" onkeydown="if(event.key==='Enter')sendWatchMsg()"/>
-        <button class="send" onclick="sendWatchMsg()">➤</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ============ LOGIN MODAL ============ -->
-<div class="modal-bg" id="loginBg" onclick="if(event.target===this)closeLogin()">
-  <div class="modal">
-    <h3>Вход в Ливачу</h3>
-    <p>Демо-режим: без пароля, аккаунт живёт только в этом браузере.</p>
-    <input id="loginName" type="text" maxlength="20" placeholder="Ваше имя" onkeydown="if(event.key==='Enter')doLogin()"/>
-    <div class="color-row" id="colorRow"></div>
-    <button class="btn" onclick="doLogin()">Войти</button>
-  </div>
-</div>
-
-<!-- ============ ADMIN LOGIN ============ -->
-<div class="modal-bg" id="adminLoginBg" onclick="if(event.target===this)closeAdminLogin()">
-  <div class="modal">
-    <h3>⚙ Вход для администратора</h3>
-    <p>Настройка сайта: название, цвета, чаты, эфиры, скрипты.</p>
-    <input id="adminUser" type="text" placeholder="Логин" onkeydown="if(event.key==='Enter')$('adminPass').focus()"/>
-    <input id="adminPass" type="password" placeholder="Пароль" onkeydown="if(event.key==='Enter')doAdminLogin()"/>
-    <div id="adminErr" style="color:var(--red); font-size:13px; margin-bottom:10px; min-height:16px"></div>
-    <button class="btn" onclick="doAdminLogin()">Войти</button>
-  </div>
-</div>
-
-<!-- ============ ADMIN PANEL ============ -->
-<div class="view" id="view-admin">
-  <div class="topbar">
-    <button class="back" onclick="closeAdmin()">←</button>
-    <div class="tt">
-      <div class="t">⚙ Админ-панель</div>
-      <div class="s">настройки сохраняются в этом браузере</div>
-    </div>
-    <div class="spacer"></div>
-    <button class="btn ghost" onclick="adminLogout()">Выйти из админа</button>
-    <button class="btn ghost" onclick="resetSettings()">Сбросить всё</button>
-    <button class="btn" onclick="saveSettings()">💾 Сохранить</button>
-  </div>
-  <div class="admin-wrap">
-    <nav class="admin-tabs">
-      <button class="on" data-tab="general" onclick="adminTab('general')">🎨 Общее</button>
-      <button data-tab="chats" onclick="adminTab('chats')">💬 Чаты</button>
-      <button data-tab="streams" onclick="adminTab('streams')">📺 Эфиры</button>
-      <button data-tab="script" onclick="adminTab('script')">📜 Скрипты</button>
-    </nav>
-    <div class="admin-body">
-      <div class="atab on" id="atab-general">
-        <h5>Внешний вид</h5>
-        <div class="set-row"><label>Название сайта</label><input type="text" id="setName"/></div>
-        <div class="set-row"><label>Основной цвет (акцент)</label><input type="color" id="setAccent"/></div>
-        <div class="set-row"><label>Яркий акцент (кнопки hover)</label><input type="color" id="setAccent2"/></div>
-        <div class="set-row"><label>Цвет фона</label><input type="color" id="setBg"/></div>
-        <h5>Контент</h5>
-        <div class="set-row"><label>Число «сейчас на сайте»</label><input type="number" id="setOnline" min="1" max="99999"/></div>
-        <div class="set-row"><label>Приветствие при входе</label><input type="text" id="setWelcome"/></div>
-        <div class="hint">После изменений нажмите «💾 Сохранить» (сверху справа). Изменения применяются сразу и живут в этом браузере.</div>
-      </div>
-      <div class="atab" id="atab-chats">
-        <h5>Чаты (карточки на главной)</h5>
-        <div id="adminChats"></div>
-        <button class="btn ghost admin-add" onclick="addAdminChat()">＋ Добавить чат</button>
-      </div>
-      <div class="atab" id="atab-streams">
-        <h5>Эфиры (секция LIVE)</h5>
-        <div id="adminStreams"></div>
-        <button class="btn ghost admin-add" onclick="addAdminStream()">＋ Добавить эфир</button>
-        <div class="hint">HLS URL — прямая ссылка на .m3u8 поток. Пример рабочего тестового: https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8</div>
-      </div>
-      <div class="atab" id="atab-script">
-        <h5>Пользовательский JavaScript</h5>
-        <textarea id="scriptArea" spellcheck="false" placeholder="// Ваш код, выполняется при загрузке сайта.// Пример:// document.title = 'Мой стриминг';"></textarea>
-        <div style="display:flex; gap:10px; margin-top:10px">
-          <button class="btn ghost" onclick="runCustomScript(true)">▶ Запустить сейчас</button>
+        <div class="call-bar">
+          <button class="cbtn" id="micBtn" title="Микрофон" onclick="toggleMic()">🎤</button>
+          <button class="cbtn" id="camBtn" title="Камера" onclick="toggleCam()">📷</button>
+          <button class="cbtn" id="chatBtn" title="Чат" onclick="toggleChat()">💬<span id="chatBadge" style="display:none; position:absolute; transform:translate(9px,-9px); background:var(--red); color:#fff; font-size:10px; font-weight:700; border-radius:999px; padding:1px 6px"></span></button>
+          <span class="call-peer" id="callPeer"></span>
+          <span class="call-time" id="callTime">00:00</span>
+          <button class="cbtn hang" onclick="hangup()">✕ Сбросить</button>
         </div>
-        <div class="hint">Скрипт выполняется на каждой загрузке страницы для ВСЕХ посетителей сайта. Не удаляйте его, если хотите вернуть обычный вид. Ошибки видны в консоли (F12). После ввода — «💾 Сохранить».</div>
+      </div>
+
+      <div class="chat-panel" id="chatPanel" style="display:none">
+        <div class="chat-head">💬 Чат <span class="n">сообщения идут поверх звонка</span></div>
+        <div class="chat-msgs" id="chatMsgs"></div>
+        <div class="chat-input">
+          <input id="chatText" type="text" placeholder="Сообщение…" maxlength="500" autocomplete="off"/>
+          <button onclick="sendChat()">➤</button>
+        </div>
       </div>
     </div>
   </div>
@@ -431,474 +263,307 @@ header{
 
 <div id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<script src="peerjs.min.js"></script>
 <script>
 'use strict';
-/* ================= data ================= */
-const GRADS = [
-  'linear-gradient(135deg,#1e3c2f,#0f2018)', 'linear-gradient(135deg,#2c3e50,#1a252f)',
-  'linear-gradient(135deg,#4a235a,#2c1533)', 'linear-gradient(135deg,#7e5109,#3d2a05)',
-  'linear-gradient(135deg,#154360,#0c2333)', 'linear-gradient(135deg,#641e16,#33100c)',
-  'linear-gradient(135deg,#1a5276,#0e2a3a)', 'linear-gradient(135deg,#4d5624,#262b12)',
+/* ================= SIGNALLING ================= */
+// Primary: local relay (wss, self-signed). Fallback: public PeerJS cloud (often blocked).
+const SERVERS = [
+  { host:'192.168.1.103', port:8443, secure:true, path:'/', label:'локальный' },
+  { label:'облако' }, // {} -> PeerJS public cloud
 ];
-const AVA_COLORS = ['#e74c3c','#9b59b6','#3498db','#f39c12','#1abc9c','#e67e22','#2ecc71','#e84393'];
-const STREAMS = [
-  {id:'s1', title:'иНВеЛиЧаВыЙ♛ — живой эфир', owner:'ливача', start:30*60, viewers:12, emoji:'🎧', grad:0, url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'},
-  {id:'s2', title:'В лабиринтах пантон', owner:'Carlson Pantone', start:10*3600+17*60, viewers:15, emoji:'🎨', grad:2, url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'},
-  {id:'s3', title:'Заказал компрессор и фрезерный станок', owner:'Никита Пантелеевчъ', start:3*3600+48*60, viewers:9, emoji:'🔧', grad:3, url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'},
-  {id:'s4', title:'Просто дома', owner:'Юрий Смолинский', start:29*60, viewers:4, emoji:'🏠', grad:1, url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'},
-  {id:'s5', title:'Уроки английского', owner:'English_Helper', start:1*60, viewers:2, emoji:'🇬🇧', grad:4, url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'},
-  {id:'s6', title:'Лучший Москва — ночной разговор', owner:'Лучший Москва', start:2*3600+33*60, viewers:7, emoji:'🌃', grad:6, url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'},
-];
-const CHATS = [
-  {id:'c1', title:'эфир под кефир', owner:'Танцы', viewers:2, online:true, emoji:'🥛', grad:0},
-  {id:'c2', title:'Зачот Зачот', owner:'Декабрина', viewers:21, online:true, emoji:'🔥', grad:1},
-  {id:'c3', title:'Борьба с урожаем и подарками', owner:'Вязальный Пепелац', viewers:11, online:true, emoji:'🎁', grad:2},
-  {id:'c4', title:'по игре случая', owner:'Ярослав Бобков', viewers:46, online:true, emoji:'🎲', grad:3},
-  {id:'c5', title:'Сплетникам и балаболам вход запрещён', owner:'г@л@в@л@м@чк@', viewers:40, online:true, emoji:'🚫', grad:4},
-  {id:'c6', title:'Палата номер шесть', owner:'Доктoр', viewers:8, online:true, emoji:'🏥', grad:5},
-  {id:'c7', title:'Собираю на сигареты', owner:'Алeксeй44', viewers:9, online:true, emoji:'💸', grad:6},
-  {id:'c8', title:'Пожарил баклажан', owner:'BooMeR254', viewers:4, online:true, emoji:'🍆', grad:7},
-  {id:'c9', title:'Птички', owner:'Феликс', viewers:2, online:true, emoji:'🐦', grad:0},
-  {id:'c10', title:'Крым', owner:'Артем', viewers:4, online:true, emoji:'🏖️', grad:1},
-  {id:'c11', title:'Котёнок', owner:'Кескюла', viewers:6, online:true, emoji:'🐱', grad:2},
-  {id:'c12', title:'Эвтерпа', owner:'Юлия Александрович1985', viewers:3, online:true, emoji:'📯', grad:3},
-  {id:'c13', title:'Всем доброго дня и вечера', owner:'Astana 13', viewers:17, online:false, emoji:'🌇', grad:4},
-  {id:'c14', title:'На пижамку', owner:'Окс', viewers:14, online:false, emoji:'🛌', grad:5},
-  {id:'c15', title:'Спонтанная беседа', owner:'Malkovich', viewers:5, online:false, emoji:'💬', grad:6},
-  {id:'c16', title:'Клуб любителей тишины', owner:'Тихон', viewers:1, online:false, emoji:'🤫', grad:7},
-  {id:'c17', title:'Вечерний караоке', owner:'Лариса Петровна', viewers:12, online:false, emoji:'🎤', grad:0},
-  {id:'c18', title:'Про машины и не только', owner:'Шустрик', viewers:23, online:false, emoji:'🚗', grad:1},
-  {id:'c19', title:'Готовим суп', owner:'Кухарка', viewers:7, online:false, emoji:'🍲', grad:2},
-  {id:'c20', title:'Философия дивана', owner:'Мудрец', viewers:3, online:false, emoji:'🛋️', grad:3},
-];
-const REPLIES = [
-  'ахах, точно 😄','ну это надо видеть','согласен','а что было дальше?','звучит круто 🔥',
-  'я тут новенький, привет всем!','ахах😂😂','не поверю, пока не увижу','класс!','ого, серьёзно?',
-  'да ладно вам','поддерживаю','а я думал иначе','вот это поворот','мощь 🔥🔥🔥',
-  'привет всем в чате!','как вам эфир?','первый раз тут','классный разговор','ахахах',
-];
-const CHAT_SEED = [
-  ['привет всем 👋','как настрой?','кто сегодня первый тут?','ахах, здравствуйте'],
-  ['всем привет!','чё как дела?','зачем вы тут собрались 😄','ну тут и собрались'],
-  ['ого, сколько людей','привет, я новенький','как звук у вас?','у нас норм, входим во вкус'],
-];
+const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-/* ================= state ================= */
-let USER = null;
-try { USER = JSON.parse(localStorage.getItem('livacha_user') || 'null'); } catch {}
-let filter = 'all';
-let curRoom = null, roomMsgs = [];
-let curStream = null, watchMsgs = [], hlsInstance = null, watchTimer = null, watchChatIv = null;
-let pickedColor = AVA_COLORS[Math.floor(Math.random()*AVA_COLORS.length)];
+let peer = null, dataConn = null, pc = null;
+let localStream = null, callTimer = null, callStart = 0;
+let myPeerId = null, peerPeerId = null;
+let chatUnread = 0, chatOpen = false;
 
-/* ================= utils ================= */
-const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ava = (name, i) => {
-  const c = AVA_COLORS[(name.length * 7 + (i||0)) % AVA_COLORS.length];
-  return `<span class="avatar" style="background:${c}">${esc(name[0]||'?').toUpperCase()}</span>`;
-};
-const fmtDur = (sec) => {
-  sec = Math.max(0, Math.floor(sec));
-  const h = String(Math.floor(sec/3600)).padStart(2,'0');
-  const m = String(Math.floor(sec%3600/60)).padStart(2,'0');
-  const s = String(sec%60).padStart(2,'0');
-  return `${h}:${m}:${s}`;
-};
-const nowSec = () => Math.floor(Date.now()/1000);
-function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),2600); }
+const $ = id => document.getElementById(id);
+function show(view){ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on', v.id===view)); window.scrollTo(0,0); }
+function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'), 2600); }
+function setStatus(t, cls){ const c=$('sigChip'); c.className='chip'+(cls?' '+cls:''); $('sigText').textContent='сигнал: '+t; }
+function setErr(t){ const e=$('errBox'); if(t){ e.textContent=t; e.classList.add('on'); } else { e.classList.remove('on'); } }
 
-/* ================= views ================= */
-function show(id){ document.querySelectorAll('.view').forEach(v=>v.classList.remove('on')); $(id).classList.add('on'); }
-function goHome(){ leaveWatch(); show('view-home'); renderHome(); window.scrollTo(0,0); }
-function setFilter(f){
-  filter=f;
-  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on', b.dataset.f===f));
-  renderHome();
-}
-function renderUserBox(){
-  if(USER){
-    $('userBox').innerHTML = `<div class="userchip" onclick="logout()" title="Нажмите, чтобы выйти">
-      <span class="avatar" style="background:${USER.color}">${esc(USER.name[0]).toUpperCase()}</span>${esc(USER.name)}</div>`;
-    const mc = $('myChats');
-    if(mc) mc.innerHTML = CHATS.slice(0,3).map(c=>
-      `<div class="side-item" onclick="openChat('${c.id}')"><span class="dot" style="background:${c.online?'var(--green2)':'#3a4654'}"></span><span class="n">${esc(c.title)}</span><span class="v">${c.viewers}</span></div>`).join('')
-      + `<div class="empty-note" style="margin-top:8px">+ ещё ${CHATS.length-3} чата…</div>`;
-  } else {
-    $('userBox').innerHTML = `<button class="btn" onclick="openLogin()">Войти</button>`;
-    const mc = $('myChats');
-    if(mc) mc.innerHTML = 'Вы ещё не входили.<br/>Нажмите «Войти» сверху — и чаты появятся здесь.';
-  }
-}
-function renderHome(){
-  const q = ($('q').value||'').trim().toLowerCase();
-  const streams = STREAMS.filter(s => !q || (s.title+' '+s.owner).toLowerCase().includes(q));
-  const chats = CHATS.filter(c => {
-    if(q && !(c.title+' '+c.owner).toLowerCase().includes(q)) return false;
-    if(filter==='online') return c.online;
-    if(filter==='offline') return !c.online;
-    return true;
+/* ---------- peer connection (signaling) with server fallback ---------- */
+function startPeer(attempt, cb){
+  attempt = attempt || 0;
+  if (peer) { try { peer.destroy(); } catch(e){} peer = null; }
+  const cfg = Object.assign({ debug:0, key:'peerjs', config:ICE }, SERVERS[attempt] || {});
+  const p = new Peer(cfg);
+  let settled = false;
+  const timer = setTimeout(()=>{
+    if (settled) return; settled = true;
+    try { p.destroy(); } catch(e){}
+    if (attempt < SERVERS.length - 1) startPeer(attempt+1, cb);
+    else onPeerDead('Не удалось подключиться к серверу сигналинга. Запустите serve.bat в папке peer-server.');
+  }, attempt === 0 ? 6000 : 5000);
+
+  p.on('open', id => {
+    if (settled) return; settled = true; clearTimeout(timer);
+    peer = p; myPeerId = id;
+    $('myCode').textContent = id;
+    setStatus(SERVERS[attempt].label, 'ok');
+    $('statusLine').textContent = 'Готово. Код: ' + id + ' — позовите собеседника.';
+    setErr('');
+    cb(id);
   });
-  $('streamsCount').textContent = `— ${streams.length} в эфире`;
-  $('chatsCount').textContent = `— найдено: ${chats.length}`;
-  $('streamsRow').innerHTML = streams.map((s,i)=>`
-    <div class="s-card" onclick="openWatch('${s.id}')">
-      <div class="s-cover" style="background:${GRADS[s.grad]}">
-        <span class="live">LIVE</span>
-        <span>${s.emoji}</span>
-        <span class="dur" data-start="${s.start}">00:00:00</span>
-        <span class="viewers">👥 ${s.viewers}</span>
-      </div>
-      <div class="s-info"><div class="t">${esc(s.title)}</div><div class="o">${ava(s.owner,i)} ${esc(s.owner)}</div></div>
-    </div>`).join('');
-  $('chatsGrid').innerHTML = chats.map((c,i)=>`
-    <div class="c-card" onclick="openChat('${c.id}')">
-      <div class="c-cover" style="background:${GRADS[c.grad]}">
-        <span>${c.emoji}</span>
-        <span class="badge ${c.online?'on':''}">${c.online? c.viewers+' онлайн':'офлайн'}</span>
-      </div>
-      <div class="c-info"><div class="t">${esc(c.title)}</div><div class="o">владелец: ${esc(c.owner)}</div></div>
-    </div>`).join('');
-  $('topStreams').innerHTML = [...STREAMS].sort((a,b)=>b.viewers-a.viewers).slice(0,4).map((s,i)=>
-    `<div class="side-item" onclick="openWatch('${s.id}')"><span class="dot" style="background:var(--red)"></span><span class="n">${esc(s.title)}</span><span class="v">👥 ${s.viewers}</span></div>`).join('');
-  tickDurations();
-}
-function tickDurations(){
-  const t = nowSec();
-  document.querySelectorAll('[data-start]').forEach(el=>{ el.textContent = fmtDur(t - (+el.dataset.start)); });
-}
-setInterval(()=>{
-  tickDurations();
-  if(curStream){ const el=$('plTimer'); if(el) el.textContent = fmtDur(nowSec()-curStream.start); }
-  // «живые» счётчики
-  if(Math.random()<0.3){
-    const n = +$('onlineNum').textContent + (Math.random()<0.5?-1:1);
-    $('onlineNum').textContent = Math.min(210, Math.max(160, n));
-  }
-}, 1000);
-
-/* ================= login ================= */
-function openLogin(){
-  $('loginBg').classList.add('on');
-  $('loginName').value = USER ? USER.name : '';
-  renderColors();
-  setTimeout(()=>$('loginName').focus(), 50);
-}
-function renderColors(){
-  $('colorRow').innerHTML = AVA_COLORS.map(c=>
-    `<span data-c="${c}" class="${c===pickedColor?'on':''}" style="background:${c}" onclick="pickColor('${c}')"></span>`).join('');
-}
-function pickColor(c){ pickedColor=c; renderColors(); }
-function closeLogin(){ $('loginBg').classList.remove('on'); }
-function doLogin(){
-  const name = $('loginName').value.trim();
-  if(!name){ $('loginName').focus(); return; }
-  USER = {name, color: pickedColor};
-  localStorage.setItem('livacha_user', JSON.stringify(USER));
-  closeLogin(); renderUserBox(); toast((S ? S.welcome : 'Добро пожаловать') + ', ' + name + '! 🎉');
-}
-function logout(){
-  USER = null; localStorage.removeItem('livacha_user');
-  renderUserBox(); toast('Вы вышли из аккаунта');
-}
-
-/* ================= chat room ================= */
-function openChat(id){
-  const c = CHATS.find(x=>x.id===id); if(!c) return;
-  curRoom = c;
-  $('roomTitle').textContent = c.title;
-  $('roomOwner').textContent = c.owner;
-  $('roomViewers').textContent = c.viewers;
-  const seed = CHAT_SEED[(c.viewers + c.title.length) % CHAT_SEED.length];
-  const t0 = nowSec() - (10 + c.viewers*30);
-  const names = [c.owner, 'Гость'+(10+ (c.title.length*7)%89), 'Мирон', 'Ольга П.', 'Санёк'];
-  roomMsgs = seed.map((txt,i)=>({who:names[i%names.length], txt, tm: t0 + i*90}));
-  renderMsgs();
-  show('view-room');
-}
-function renderMsgs(){
-  $('msgs').innerHTML = roomMsgs.map(m=>{
-    if(m.sys) return `<div class="msg sys"><div class="body">${esc(m.txt)}</div></div>`;
-    const me = USER && m.who===USER.name;
-    return `<div class="msg ${me?'me':''}">
-      <span class="avatar" style="background:${me?USER.color:AVA_COLORS[m.who.length%AVA_COLORS.length]}">${esc(m.who[0]).toUpperCase()}</span>
-      <div><div class="meta"><b>${esc(m.who)}</b><span>${new Date(m.tm*1000).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</span></div>
-      <div class="body">${esc(m.txt)}</div></div>
-    </div>`;
-  }).join('');
-  $('msgs').scrollTop = $('msgs').scrollHeight;
-}
-function sendMsg(){
-  const inp = $('msgInput'); const t = inp.value.trim(); if(!t) return;
-  if(!USER){ openLogin(); toast('Войдите, чтобы писать в чат'); return; }
-  inp.value='';
-  roomMsgs.push({who:USER.name, txt:t, tm:nowSec()});
-  renderMsgs();
-  // авто-ответ собеседника
-  const c = curRoom;
-  setTimeout(()=>{
-    if(curRoom!==c) return;
-    const names = [c.owner, 'Гость'+(10+(c.title.length*7)%89), 'Мирон'];
-    roomMsgs.push({who: names[Math.floor(Math.random()*names.length)], txt: REPLIES[Math.floor(Math.random()*REPLIES.length)], tm:nowSec()});
-    renderMsgs();
-  }, 1200 + Math.random()*2600);
-}
-function addSmile(){
-  const inp=$('msgInput'); const s=['😊','🔥','😂','👍','❤️','🎉'];
-  inp.value += (inp.value ? ' ' : '') + s[Math.floor(Math.random()*s.length)];
-  inp.focus();
-}
-function leaveRoom(){ goHome(); }
-
-/* ================= watch ================= */
-function openWatch(id){
-  const s = STREAMS.find(x=>x.id===id); if(!s) return;
-  curStream = s;
-  $('watchTitle').textContent = s.title;
-  $('watchOwner').innerHTML = `${ava(s.owner, 3)} ${esc(s.owner)}`;
-  $('watchViewers').textContent = s.viewers;
-  $('plTimer').textContent = fmtDur(nowSec()-s.start);
-  watchMsgs = [
-    {who:'Гость22', txt:'привет всем в эфире 👋'},
-    {who:s.owner, txt:'всем привет! добро пожаловать'},
-    {who:'Мирон', txt:'звучит/выглядит отлично'},
-    {who:'Ольга П.', txt:'зашла со старого друга, рада видеть'},
-  ].map((m,i)=>({...m, tm: nowSec()-300+i*60}));
-  renderWatchMsgs();
-  show('view-watch');
-  startHls(s.url);
-  const names=[s.owner,'Гость22','Мирон','Ольга П.','Санёк'];
-  watchChatIv = setInterval(()=>{
-    if(Math.random()<0.55){
-      watchMsgs.push({who:names[Math.floor(Math.random()*names.length)], txt:REPLIES[Math.floor(Math.random()*REPLIES.length)], tm:nowSec()});
-      if(watchMsgs.length>120) watchMsgs.shift();
-      renderWatchMsgs();
+  p.on('error', e => {
+    const t = e && e.type;
+    if (settled) {
+      // already open: connection-level errors
+      if (t === 'peer-unavailable') { setErr('Собеседник с этим кодом не найден (он не в сети или код неверный).'); }
+      else if (t === 'unavailable-id') { setErr('Код занят другим устройством. Обновите страницу — будет выдан новый код.'); }
+      else if (t === 'server-error') {
+        if (dataConn) endCall('Собеседник недоступен (сигналинг)');
+        else { setStatus('офлайн', 'bad'); $('statusLine').textContent = 'Ошибка сервера сигналинга. Обновите страницу.'; }
+      }
+      else if (t === 'disconnected') { try { p.reconnect(); } catch(_){} }
+      else if (t === 'network' || t === 'socket-error' || t === 'ssl-unavailable') {
+        setStatus('офлайн', 'bad');
+        $('statusLine').textContent = 'Соединение с сервером сигналинга потеряно.';
+      }
+      return;
     }
-  }, 4200);
+    settled = true; clearTimeout(timer);
+    if (t === 'id-in-use' || t === 'unavailable-id') { try { p.destroy(); } catch(_){} startPeer(0, cb); return; }
+    // not open yet: try next server
+    if (attempt < SERVERS.length - 1) startPeer(attempt+1, cb);
+    else onPeerDead(hintFor(t));
+  });
+  p.on('disconnected', () => {
+    if (!settled) return;
+    setStatus('офлайн', 'bad');
+    try { p.reconnect(); } catch(e){}
+  });
 }
-function renderWatchMsgs(){
-  const colors = {};
-  $('watchMsgs').innerHTML = watchMsgs.map(m=>{
-    if(!colors[m.who]) colors[m.who] = AVA_COLORS[(m.who.length*5)%AVA_COLORS.length];
-    const me = USER && m.who===USER.name;
-    return `<div class="wmsg"><span class="tm">${new Date(m.tm*1000).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</span><b style="color:${me?USER.color:colors[m.who]}">${esc(m.who)}:</b> ${esc(m.txt)}</div>`;
-  }).join('');
-  $('watchMsgs').scrollTop = $('watchMsgs').scrollHeight;
-  $('watchChatCount').textContent = `· ${watchMsgs.length} сообщений`;
-}
-function sendWatchMsg(){
-  const inp=$('watchInput'); const t=inp.value.trim(); if(!t) return;
-  inp.value='';
-  const who = USER ? USER.name : 'Гость'+(10+Math.floor(Math.random()*89));
-  watchMsgs.push({who, txt:t, tm:nowSec()});
-  renderWatchMsgs();
-}
-function gift(emoji, name){
-  const who = USER ? USER.name : 'Гость';
-  watchMsgs.push({who, txt:`отправил(а) ${emoji} ${name} стримеру!`, tm:nowSec(), gift:true});
-  renderWatchMsgs();
-  toast(`${emoji} ${name} — принято!`);
-}
-function startHls(url){
-  const v = $('player');
-  if(hlsInstance){ hlsInstance.destroy(); hlsInstance=null; }
-  v.removeAttribute('src'); v.load();
-  if(window.Hls && Hls.isSupported()){
-    hlsInstance = new Hls({maxBufferLength: 30});
-    hlsInstance.loadSource(url);
-    hlsInstance.attachMedia(v);
-    hlsInstance.on(Hls.Events.MANIFEST_PARSED, ()=>v.play().catch(()=>{}));
-    hlsInstance.on(Hls.Events.ERROR, (e, d)=>{ if(d.fatal){ toast('Ошибка потока: '+d.type+', пробуем другой…'); switchStream(); } });
-  } else if(v.canPlayType('application/vnd.apple.mpegurl')){
-    v.src = url; v.play().catch(()=>{});
-  } else {
-    toast('HLS не поддерживается этим браузером');
+
+function hintFor(t){
+  switch(t){
+    case 'ssl-unavailable':
+      return 'Локальный сервер не отвечает по wss. Если на телефоне: один раз откройте https://192.168.1.103:8443 и примите сертификат. Если на ПК: запустите peer-server/serve.bat.';
+    case 'server-error':
+    case 'network':
+    case 'socket-error':
+      return 'Сервер сигналинга недоступен. На ПК запустите peer-server/serve.bat и обновите страницу.';
+    case 'unavailable-id':
+      return 'Не удалось получить код. Обновите страницу.';
+    default:
+      return 'Ошибка сигналинга: ' + (t || 'неизвестная') + '. Обновите страницу или перезапустите serve.bat.';
   }
 }
-function switchStream(){
-  if(!curStream) return;
-  const urls = STREAMS.map(s=>s.url);
-  const alt = urls.find(u=>u!==curStream.url) || 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
-  curStream.url = alt; startHls(alt);
-}
-function leaveWatch(){
-  if(watchChatIv){ clearInterval(watchChatIv); watchChatIv=null; }
-  if(hlsInstance){ hlsInstance.destroy(); hlsInstance=null; }
-  const v=$('player'); v.pause(); v.removeAttribute('src'); v.load();
-  curStream=null;
-  goHome();
+function onPeerDead(msg){
+  peer = null;
+  setStatus('офлайн', 'bad');
+  $('statusLine').textContent = 'Нет связи с сервером сигналинга.';
+  setErr(msg);
+  $('callBtn').disabled = false;
 }
 
-/* ================= ADMIN ================= */
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'webmaster7778';
-let S = null;
-
-function loadSettings(){
-  const def = {
-    name:'Ливача', accent:'#7c5cff', accent2:'#a78bfa', bg:'#0a0d1c', onlineBase:186,
-    welcome:'Добро пожаловать',
-    chats: JSON.parse(JSON.stringify(CHATS)),
-    streams: JSON.parse(JSON.stringify(STREAMS)),
-    script:''
-  };
+/* ---------- media ---------- */
+async function grabMedia(){
+  if (localStream) return localStream;
   try {
-    const saved = JSON.parse(localStorage.getItem('livacha_settings') || 'null');
-    S = saved ? Object.assign(def, saved) : def;
-    if(!S.chats || !S.chats.length) S.chats = def.chats;
-    if(!S.streams || !S.streams.length) S.streams = def.streams;
-  } catch(e) { S = def; }
-  applyTheme();
-  CHATS.length = 0; S.chats.forEach(c=>CHATS.push(c));
-  STREAMS.length = 0; S.streams.forEach(s=>STREAMS.push(s));
-}
-function applyTheme(){
-  document.documentElement.style.setProperty('--green', S.accent);
-  document.documentElement.style.setProperty('--green2', S.accent2);
-  document.body.style.backgroundColor = S.bg;
-  document.title = S.name + ' — частные онлайн стримы';
-  const lb = document.querySelector('.logo');
-  if(lb) lb.childNodes.forEach(n=>{}); // keep logo markup, text set below
-  const span = document.querySelector('.logo span:last-child');
-  if(span) span.innerHTML = esc(S.name) + '<small>™</small>';
-}
-function adminEntry(){
-  if(sessionStorage.getItem('livacha_admin')==='1') openAdmin();
-  else openAdminLogin();
-}
-function openAdminLogin(){
-  $('adminErr').textContent='';
-  $('adminUser').value=''; $('adminPass').value='';
-  $('adminLoginBg').classList.add('on');
-  setTimeout(()=>$('adminUser').focus(), 50);
-}
-function closeAdminLogin(){ $('adminLoginBg').classList.remove('on'); }
-function doAdminLogin(){
-  if($('adminUser').value.trim()===ADMIN_USER && $('adminPass').value===ADMIN_PASS){
-    sessionStorage.setItem('livacha_admin','1');
-    closeAdminLogin(); openAdmin();
-  } else {
-    $('adminErr').textContent='Неверный логин или пароль';
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: true,
+    });
+  } catch(e1){
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      toast('Камера не найдена — звоним без видео');
+    } catch(e2){
+      throw new Error('Нет доступа к камере и микрофону. Разрешите доступ в браузере (иконка замка в адресной строке).');
+    }
   }
-}
-function adminLogout(){
-  sessionStorage.removeItem('livacha_admin');
-  closeAdmin();
-  toast('Вы вышли из админ-режима');
-}
-function openAdmin(){
-  show('view-admin');
-  adminFillForms();
-  renderAdminChats();
-  renderAdminStreams();
-  $('scriptArea').value = S.script || '';
-  window.scrollTo(0,0);
-}
-function closeAdmin(){ goHome(); }
-function adminTab(t){
-  document.querySelectorAll('.admin-tabs button').forEach(b=>b.classList.toggle('on', b.dataset.tab===t));
-  document.querySelectorAll('.admin-body .atab').forEach(d=>d.classList.toggle('on', d.id==='atab-'+t));
-}
-function adminFillForms(){
-  $('setName').value = S.name;
-  $('setAccent').value = S.accent;
-  $('setAccent2').value = S.accent2;
-  $('setBg').value = S.bg;
-  $('setOnline').value = S.onlineBase;
-  $('setWelcome').value = S.welcome;
-}
-function escAttr(v){ return esc(v).replace(/\n/g,' '); }
-function renderAdminChats(){
-  $('adminChats').innerHTML = S.chats.map((c,i)=>`
-    <div class="admin-row">
-      <input data-k="title" value="${escAttr(c.title)}" placeholder="Название" style="flex:2"/>
-      <input data-k="owner" value="${escAttr(c.owner)}" placeholder="Владелец"/>
-      <input data-k="emoji" value="${escAttr(c.emoji)}" placeholder="😎" style="width:64px; flex:none"/>
-      <input data-k="viewers" type="number" value="${c.viewers}" min="0" title="зрителей"/>
-      <label class="admin-chk"><input type="checkbox" data-k="online" ${c.online?'checked':''}/> online</label>
-      <button class="admin-del" title="Удалить" onclick="delAdminChat(${i})">✕</button>
-    </div>`).join('');
-}
-function delAdminChat(i){ S.chats.splice(i,1); renderAdminChats(); }
-function addAdminChat(){
-  S.chats.push({id:'c'+Date.now(), title:'Новый чат', owner:'Владелец', viewers:1, online:true, emoji:'💬', grad:Math.floor(Math.random()*8)});
-  renderAdminChats();
-}
-function renderAdminStreams(){
-  $('adminStreams').innerHTML = S.streams.map((s,i)=>`
-    <div class="admin-row">
-      <input data-k="title" value="${escAttr(s.title)}" placeholder="Название эфира" style="flex:2"/>
-      <input data-k="owner" value="${escAttr(s.owner)}" placeholder="Стример"/>
-      <input data-k="emoji" value="${escAttr(s.emoji)}" placeholder="📺" style="width:64px; flex:none"/>
-      <input data-k="viewers" type="number" value="${s.viewers}" min="0" title="зрителей"/>
-      <input data-k="url" value="${escAttr(s.url)}" placeholder="https://…m3u8" style="flex:2"/>
-      <button class="admin-del" title="Удалить" onclick="delAdminStream(${i})">✕</button>
-    </div>`).join('');
-}
-function delAdminStream(i){ S.streams.splice(i,1); renderAdminStreams(); }
-function addAdminStream(){
-  S.streams.push({id:'s'+Date.now(), title:'Новый эфир', owner:'Стример', start:Math.floor(Date.now()/1000)-3600, viewers:1, emoji:'📺', grad:Math.floor(Math.random()*8), url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'});
-  renderAdminStreams();
-}
-function collectAdminForms(){
-  S.name = $('setName').value.trim() || 'Ливача';
-  S.accent = $('setAccent').value;
-  S.accent2 = $('setAccent2').value;
-  S.bg = $('setBg').value;
-  S.onlineBase = Math.max(1, +$('setOnline').value || 186);
-  S.welcome = $('setWelcome').value.trim() || 'Добро пожаловать';
-  $('adminChats').querySelectorAll('.admin-row').forEach((row,i)=>{
-    row.querySelectorAll('[data-k]').forEach(el=>{
-      const k = el.dataset.k;
-      if(k==='online') S.chats[i].online = el.checked;
-      else if(k==='viewers') S.chats[i].viewers = Math.max(0, +el.value || 0);
-      else S.chats[i][k] = el.value;
-    });
-  });
-  $('adminStreams').querySelectorAll('.admin-row').forEach((row,i)=>{
-    row.querySelectorAll('[data-k]').forEach(el=>{
-      const k = el.dataset.k;
-      if(k==='viewers') S.streams[i].viewers = Math.max(0, +el.value || 0);
-      else S.streams[i][k] = el.value;
-    });
-  });
-  S.script = $('scriptArea').value;
-}
-function saveSettings(){
-  collectAdminForms();
-  localStorage.setItem('livacha_settings', JSON.stringify(S));
-  CHATS.length = 0; S.chats.forEach(c=>CHATS.push(c));
-  STREAMS.length = 0; S.streams.forEach(s=>STREAMS.push(s));
-  applyTheme();
-  $('onlineNum').textContent = S.onlineBase;
-  toast('✅ Настройки сохранены');
-}
-function resetSettings(){
-  if(!confirm('Сбросить ВСЕ настройки к стандартным?')) return;
-  localStorage.removeItem('livacha_settings');
-  location.reload();
-}
-function runCustomScript(manual){
-  if(!S || !S.script) { if(manual) toast('Скрипт пуст'); return; }
-  try { (new Function(S.script))(); if(manual) toast('▶ Скрипт выполнен'); }
-  catch(e){ console.error('[admin script]', e); if(manual) toast('Ошибка в скрипте: ' + e.message); }
+  return localStream;
 }
 
-/* ================= init ================= */
-loadSettings();
-renderUserBox();
-renderHome();
-runCustomScript(false);
-document.addEventListener('keydown', (e)=>{
-  if(e.key==='Escape'){
-    if($('loginBg').classList.contains('on')) closeLogin();
-    if($('adminLoginBg').classList.contains('on')) closeAdminLogin();
+/* ---------- call ---------- */
+async function startCall(){
+  const code = $('peerCode').value.trim().toUpperCase();
+  if (code === (myPeerId||'')) { setErr('Это ваш собственный код 😉'); return; }
+  setErr('');
+  let stream;
+  try { stream = await grabMedia(); } catch(e){ setErr(e.message); return; }
+  $('self').srcObject = stream;
+
+  show('view-call');
+  $('callPeer').textContent = code;
+  $('stagePhText').textContent = 'Ожидание ответа собеседника…';
+  $('connTag').textContent = 'соединяемся…'; $('connTag').classList.remove('ok');
+  resetChat();
+  $('chatMsgs').insertAdjacentHTML('beforeend', addMsgHtml('sys', 'Вы позвонили на ' + escHtml(code)));
+  $('callBtn').disabled = true;
+  callStart = 0; stopTimer();
+
+  const ensurePeer = id => {
+    if (dataConn) return;
+    dataConn = peer.connect(code, { reliable:true, serialization:'json' });
+    wireDataConn();
+  };
+
+  if (peer && myPeerId) ensurePeer(myPeerId);
+  else startPeer(0, id => ensurePeer(id));
+}
+
+function wireDataConn(){
+  dataConn.on('open', () => {
+    // we are the initiator: build offer with our media
+    createPC();
+    if (localStream) localStream.getTracks().forEach(tr => pc.addTrack(tr, localStream));
+    pc.createOffer().then(o => pc.setLocalDescription(o)).then(() => {
+      dataConn.send({ t:'o', sdp: pc.localDescription });
+    });
+  });
+  dataConn.on('data', handleSig);
+  dataConn.on('close', () => endCall('Собеседник отключился'));
+  dataConn.on('error', e => { setErr('Ошибка канала: ' + e); });
+}
+
+/* ---------- WebRTC ---------- */
+function createPC(){
+  if (pc) return;
+  pc = new RTCPeerConnection(ICE);
+  pc.onicecandidate = e => { if (dataConn) dataConn.send({ t:'i', c: e.candidate || null }); };
+  pc.ontrack = e => {
+    const s = e.streams[0];
+    if (s) $('remote').srcObject = s;
+    $('stagePh').style.display = 'none';
+  };
+  pc.onconnectionstatechange = () => {
+    const st = pc.connectionState;
+    if (st === 'connected') {
+      $('connTag').textContent = '● в эфире';
+      $('connTag').classList.add('ok');
+      $('stagePhText').textContent = '';
+      if (!callStart){ callStart = Date.now(); startTimer(); }
+    } else if (st === 'disconnected' || st === 'failed') {
+      $('connTag').textContent = 'связь потеряна';
+      $('connTag').classList.remove('ok');
+    }
+  };
+}
+
+// handle signaling messages: o=offer, a=answer, i=ice, c=chat, x=hangup
+function handleSig(m){
+  if (!m || !m.t) return;
+  if (m.t === 'o') {
+    createPC();
+    if (localStream) localStream.getTracks().forEach(tr => { try { pc.addTrack(tr, localStream); } catch(e){} });
+    pc.setRemoteDescription(m.sdp)
+      .then(() => pc.createAnswer())
+      .then(a => pc.setLocalDescription(a))
+      .then(() => dataConn.send({ t:'a', sdp: pc.localDescription }))
+      .catch(e => console.warn('rtc err', e));
+  } else if (m.t === 'a') {
+    if (pc) pc.setRemoteDescription(m.sdp).catch(e => console.warn('rtc err', e));
+  } else if (m.t === 'i') {
+    if (pc && m.c) pc.addIceCandidate(m.c).catch(()=>{});
+  } else if (m.t === 'c') {
+    onChatMsg(m.m);
+  } else if (m.t === 'x') {
+    endCall('Собеседник завершил звонок');
   }
-});
+}
+
+/* ---------- chat ---------- */
+function resetChat(){
+  chatUnread = 0; $('chatBadge').style.display='none';
+  $('chatMsgs').innerHTML = '';
+  chatOpen = false; $('chatPanel').style.display='none';
+}
+function addMsgHtml(cls, text){
+  const d = new Date();
+  const tm = d.toTimeString().slice(0,5);
+  return '<div class="cmsg ' + cls + '"><span class="tm">' + tm + '</span>' + text + '</div>';
+}
+function onChatMsg(m){
+  $('chatMsgs').insertAdjacentHTML('beforeend', addMsgHtml('', escHtml(m)));
+  $('chatMsgs').scrollTop = 1e9;
+  if (!chatOpen){ chatUnread++; $('chatBadge').textContent = chatUnread; $('chatBadge').style.display='block'; }
+}
+function sendChat(){
+  const i = $('chatText'); const m = i.value.trim();
+  if (!m || !dataConn) return;
+  dataConn.send({ t:'c', m });
+  $('chatMsgs').insertAdjacentHTML('beforeend', addMsgHtml('me', escHtml(m)));
+  $('chatMsgs').scrollTop = 1e9;
+  i.value = '';
+}
+function toggleChat(){
+  chatOpen = !chatOpen;
+  $('chatPanel').style.display = chatOpen ? 'flex' : 'none';
+  if (chatOpen){ chatUnread = 0; $('chatBadge').style.display='none'; $('chatMsgs').scrollTop = 1e9; }
+}
+function escHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- mic / cam toggles ---------- */
+function toggleMic(){
+  if (!localStream) return;
+  const tr = localStream.getAudioTracks()[0];
+  if (tr){ tr.enabled = !tr.enabled; $('micBtn').classList.toggle('off', !tr.enabled); toast(tr.enabled ? 'Микрофон включён' : 'Микрофон выключен'); }
+}
+function toggleCam(){
+  if (!localStream) return;
+  const tr = localStream.getVideoTracks()[0];
+  if (tr){ tr.enabled = !tr.enabled; $('camBtn').classList.toggle('off', !tr.enabled); toast(tr.enabled ? 'Камера включена' : 'Камера выключена'); }
+  else toast('Камера отсутствовала (звук только)');
+}
+
+/* ---------- timer ---------- */
+function startTimer(){
+  stopTimer();
+  callTimer = setInterval(() => {
+    const s = Math.floor((Date.now() - callStart)/1000);
+    $('callTime').textContent = String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+  }, 1000);
+}
+function stopTimer(){ if (callTimer){ clearInterval(callTimer); callTimer=null; } }
+
+/* ---------- hangup / end ---------- */
+function hangup(){
+  if (dataConn){ try { dataConn.send({ t:'x' }); } catch(e){} }
+  endCall('Вы завершили звонок');
+}
+function endCall(reason){
+  stopTimer();
+  if (pc){ try { pc.close(); } catch(e){} pc = null; }
+  if (dataConn){ try { dataConn.close(); } catch(e){} dataConn = null; }
+  if (localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream = null; }
+  $('remote').srcObject = null; $('self').srcObject = null;
+  $('stagePh').style.display = 'flex';
+  $('stagePhText').textContent = reason || '';
+  $('connTag').textContent = 'соединяемся…'; $('connTag').classList.remove('ok');
+  $('callTime').textContent = '00:00';
+  $('micBtn').classList.remove('off'); $('camBtn').classList.remove('off');
+  resetChat();
+  show('view-lobby');
+  $('callBtn').disabled = false;
+  $('statusLine').textContent = reason || 'Готово.';
+  if (reason) toast(reason);
+}
+
+/* ---------- misc ---------- */
+function copyCode(){
+  if (!myPeerId) { toast('Код ещё не получен'); return; }
+  const t = myPeerId;
+  const done = () => { toast('Код скопирован: ' + t); $('copyBtn').textContent='✓ Сделано'; setTimeout(()=>$('copyBtn').textContent='📋 Копировать', 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done).catch(()=>fallbackCopy(t, done));
+  else fallbackCopy(t, done);
+}
+function fallbackCopy(t, done){
+  const i = document.createElement('input'); i.value = t; document.body.appendChild(i); i.select();
+  try { document.execCommand('copy'); done(); } catch(e){ prompt('Скопируйте код:', t); }
+  i.remove();
+}
+
+$('peerCode').addEventListener('keydown', e => { if (e.key === 'Enter') startCall(); });
+$('chatText').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+window.addEventListener('beforeunload', () => { if (dataConn){ try { dataConn.send({ t:'x' }); } catch(e){} } });
+
+/* ---------- boot ---------- */
+startPeer(0, ()=>{});
 </script>
-
-<!-- Бегущая строка (реклама) -->
-<div id="marquee"><div class="track"><span>📢 Реклама — 50 рублей · 📢 Реклама — 50 рублей · 📢 Реклама — 50 рублей</span></div></div>
 </body>
 </html>
