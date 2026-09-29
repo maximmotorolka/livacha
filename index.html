@@ -198,6 +198,35 @@ header{
   .search{order:5; max-width:none; flex-basis:100%}
   .msg{max-width:90%}
 }
+/* ---------- admin ---------- */
+.admin-gear{width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--line);font-size:16px;flex:none;opacity:.55;transition:.15s}
+.admin-gear:hover{opacity:1; border-color:var(--green)}
+.admin-wrap{display:flex; height:calc(100vh - 52px - 61px); max-width:1100px; margin:0 auto}
+.admin-tabs{width:180px; flex:none; border-right:1px solid var(--line); padding:14px 10px; display:flex; flex-direction:column; gap:6px; background:var(--bg2)}
+.admin-tabs button{text-align:left; padding:10px 12px; border-radius:9px; font-size:14px; color:var(--muted)}
+.admin-tabs button.on{background:var(--green); color:#fff}
+.admin-body{flex:1; overflow-y:auto; padding:18px; min-width:0}
+.atab{display:none}
+.atab.on{display:block}
+.atab h5{font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin:18px 0 10px}
+.atab h5:first-child{margin-top:0}
+.set-row{display:flex; gap:10px; align-items:center; margin-bottom:12px; max-width:600px}
+.set-row label{width:190px; font-size:13.5px; color:var(--muted); flex:none}
+.set-row input[type=text],.set-row input[type=number]{flex:1; padding:9px 12px; border-radius:9px; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:14px; outline:none}
+.set-row input[type=color]{width:46px; height:38px; border:1px solid var(--line); border-radius:8px; background:var(--card); padding:2px; cursor:pointer}
+.admin-row{display:flex; gap:8px; align-items:center; margin-bottom:9px; flex-wrap:wrap}
+.admin-row input{padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:13.5px; flex:1; min-width:100px; outline:none}
+.admin-row input[type=number]{width:70px; flex:none}
+.admin-row input[type=checkbox]{width:auto; flex:none}
+.admin-chk{font-size:12.5px; color:var(--muted); display:flex; gap:5px; align-items:center; flex:none}
+.admin-del{width:32px; height:32px; border-radius:8px; background:var(--card); border:1px solid var(--line); color:var(--red); flex:none; font-size:14px}
+.admin-del:hover{border-color:var(--red)}
+#scriptArea{width:100%; height:320px; resize:vertical; padding:12px; border-radius:10px; border:1px solid var(--line); background:#0a0d11; color:#9fe8b8; font-family:Consolas,Menlo,monospace; font-size:13px; outline:none; line-height:1.5}
+.hint{font-size:12.5px; color:var(--muted); margin-top:8px; line-height:1.55; max-width:720px}
+@media (max-width:760px){
+  .admin-wrap{flex-direction:column; height:auto}
+  .admin-tabs{width:100%; flex-direction:row; border-right:none; border-bottom:1px solid var(--line); flex-wrap:wrap}
+}
 </style>
 </head>
 <body>
@@ -215,6 +244,7 @@ header{
   <div class="search"><input id="q" type="text" placeholder="Поиск чатов и стримов…" oninput="renderHome()"/></div>
   <div class="spacer"></div>
   <div id="userBox"></div>
+  <button class="admin-gear" title="Админ-панель" onclick="adminEntry()">⚙</button>
 </header>
 
 <!-- ============ HOME ============ -->
@@ -316,6 +346,73 @@ header{
     <input id="loginName" type="text" maxlength="20" placeholder="Ваше имя" onkeydown="if(event.key==='Enter')doLogin()"/>
     <div class="color-row" id="colorRow"></div>
     <button class="btn" onclick="doLogin()">Войти</button>
+  </div>
+</div>
+
+<!-- ============ ADMIN LOGIN ============ -->
+<div class="modal-bg" id="adminLoginBg" onclick="if(event.target===this)closeAdminLogin()">
+  <div class="modal">
+    <h3>⚙ Вход для администратора</h3>
+    <p>Настройка сайта: название, цвета, чаты, эфиры, скрипты.</p>
+    <input id="adminUser" type="text" placeholder="Логин" onkeydown="if(event.key==='Enter')$('adminPass').focus()"/>
+    <input id="adminPass" type="password" placeholder="Пароль" onkeydown="if(event.key==='Enter')doAdminLogin()"/>
+    <div id="adminErr" style="color:var(--red); font-size:13px; margin-bottom:10px; min-height:16px"></div>
+    <button class="btn" onclick="doAdminLogin()">Войти</button>
+  </div>
+</div>
+
+<!-- ============ ADMIN PANEL ============ -->
+<div class="view" id="view-admin">
+  <div class="topbar">
+    <button class="back" onclick="closeAdmin()">←</button>
+    <div class="tt">
+      <div class="t">⚙ Админ-панель</div>
+      <div class="s">настройки сохраняются в этом браузере</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn ghost" onclick="adminLogout()">Выйти из админа</button>
+    <button class="btn ghost" onclick="resetSettings()">Сбросить всё</button>
+    <button class="btn" onclick="saveSettings()">💾 Сохранить</button>
+  </div>
+  <div class="admin-wrap">
+    <nav class="admin-tabs">
+      <button class="on" data-tab="general" onclick="adminTab('general')">🎨 Общее</button>
+      <button data-tab="chats" onclick="adminTab('chats')">💬 Чаты</button>
+      <button data-tab="streams" onclick="adminTab('streams')">📺 Эфиры</button>
+      <button data-tab="script" onclick="adminTab('script')">📜 Скрипты</button>
+    </nav>
+    <div class="admin-body">
+      <div class="atab on" id="atab-general">
+        <h5>Внешний вид</h5>
+        <div class="set-row"><label>Название сайта</label><input type="text" id="setName"/></div>
+        <div class="set-row"><label>Основной цвет (акцент)</label><input type="color" id="setAccent"/></div>
+        <div class="set-row"><label>Яркий акцент (кнопки hover)</label><input type="color" id="setAccent2"/></div>
+        <div class="set-row"><label>Цвет фона</label><input type="color" id="setBg"/></div>
+        <h5>Контент</h5>
+        <div class="set-row"><label>Число «сейчас на сайте»</label><input type="number" id="setOnline" min="1" max="99999"/></div>
+        <div class="set-row"><label>Приветствие при входе</label><input type="text" id="setWelcome"/></div>
+        <div class="hint">После изменений нажмите «💾 Сохранить» (сверху справа). Изменения применяются сразу и живут в этом браузере.</div>
+      </div>
+      <div class="atab" id="atab-chats">
+        <h5>Чаты (карточки на главной)</h5>
+        <div id="adminChats"></div>
+        <button class="btn ghost admin-add" onclick="addAdminChat()">＋ Добавить чат</button>
+      </div>
+      <div class="atab" id="atab-streams">
+        <h5>Эфиры (секция LIVE)</h5>
+        <div id="adminStreams"></div>
+        <button class="btn ghost admin-add" onclick="addAdminStream()">＋ Добавить эфир</button>
+        <div class="hint">HLS URL — прямая ссылка на .m3u8 поток. Пример рабочего тестового: https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8</div>
+      </div>
+      <div class="atab" id="atab-script">
+        <h5>Пользовательский JavaScript</h5>
+        <textarea id="scriptArea" spellcheck="false" placeholder="// Ваш код, выполняется при загрузке сайта.// Пример:// document.title = 'Мой стриминг';"></textarea>
+        <div style="display:flex; gap:10px; margin-top:10px">
+          <button class="btn ghost" onclick="runCustomScript(true)">▶ Запустить сейчас</button>
+        </div>
+        <div class="hint">Скрипт выполняется на каждой загрузке страницы для ВСЕХ посетителей сайта. Не удаляйте его, если хотите вернуть обычный вид. Ошибки видны в консоли (F12). После ввода — «💾 Сохранить».</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -486,7 +583,7 @@ function doLogin(){
   if(!name){ $('loginName').focus(); return; }
   USER = {name, color: pickedColor};
   localStorage.setItem('livacha_user', JSON.stringify(USER));
-  closeLogin(); renderUserBox(); toast(`Добро пожаловать, ${name}! 🎉`);
+  closeLogin(); renderUserBox(); toast((S ? S.welcome : 'Добро пожаловать') + ', ' + name + '! 🎉');
 }
 function logout(){
   USER = null; localStorage.removeItem('livacha_user');
@@ -620,10 +717,172 @@ function leaveWatch(){
   goHome();
 }
 
+/* ================= ADMIN ================= */
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = 'webmaster7778';
+let S = null;
+
+function loadSettings(){
+  const def = {
+    name:'Ливача', accent:'#21a94a', accent2:'#2ecc71', bg:'#0f1216', onlineBase:186,
+    welcome:'Добро пожаловать',
+    chats: JSON.parse(JSON.stringify(CHATS)),
+    streams: JSON.parse(JSON.stringify(STREAMS)),
+    script:''
+  };
+  try {
+    const saved = JSON.parse(localStorage.getItem('livacha_settings') || 'null');
+    S = saved ? Object.assign(def, saved) : def;
+    if(!S.chats || !S.chats.length) S.chats = def.chats;
+    if(!S.streams || !S.streams.length) S.streams = def.streams;
+  } catch(e) { S = def; }
+  applyTheme();
+  CHATS.length = 0; S.chats.forEach(c=>CHATS.push(c));
+  STREAMS.length = 0; S.streams.forEach(s=>STREAMS.push(s));
+}
+function applyTheme(){
+  document.documentElement.style.setProperty('--green', S.accent);
+  document.documentElement.style.setProperty('--green2', S.accent2);
+  document.body.style.background = S.bg;
+  document.title = S.name + ' — частные онлайн стримы';
+  const lb = document.querySelector('.logo');
+  if(lb) lb.childNodes.forEach(n=>{}); // keep logo markup, text set below
+  const span = document.querySelector('.logo span:last-child');
+  if(span) span.innerHTML = esc(S.name) + '<small>™</small>';
+}
+function adminEntry(){
+  if(sessionStorage.getItem('livacha_admin')==='1') openAdmin();
+  else openAdminLogin();
+}
+function openAdminLogin(){
+  $('adminErr').textContent='';
+  $('adminUser').value=''; $('adminPass').value='';
+  $('adminLoginBg').classList.add('on');
+  setTimeout(()=>$('adminUser').focus(), 50);
+}
+function closeAdminLogin(){ $('adminLoginBg').classList.remove('on'); }
+function doAdminLogin(){
+  if($('adminUser').value.trim()===ADMIN_USER && $('adminPass').value===ADMIN_PASS){
+    sessionStorage.setItem('livacha_admin','1');
+    closeAdminLogin(); openAdmin();
+  } else {
+    $('adminErr').textContent='Неверный логин или пароль';
+  }
+}
+function adminLogout(){
+  sessionStorage.removeItem('livacha_admin');
+  closeAdmin();
+  toast('Вы вышли из админ-режима');
+}
+function openAdmin(){
+  show('view-admin');
+  adminFillForms();
+  renderAdminChats();
+  renderAdminStreams();
+  $('scriptArea').value = S.script || '';
+  window.scrollTo(0,0);
+}
+function closeAdmin(){ goHome(); }
+function adminTab(t){
+  document.querySelectorAll('.admin-tabs button').forEach(b=>b.classList.toggle('on', b.dataset.tab===t));
+  document.querySelectorAll('.admin-body .atab').forEach(d=>d.classList.toggle('on', d.id==='atab-'+t));
+}
+function adminFillForms(){
+  $('setName').value = S.name;
+  $('setAccent').value = S.accent;
+  $('setAccent2').value = S.accent2;
+  $('setBg').value = S.bg;
+  $('setOnline').value = S.onlineBase;
+  $('setWelcome').value = S.welcome;
+}
+function escAttr(v){ return esc(v).replace(/\n/g,' '); }
+function renderAdminChats(){
+  $('adminChats').innerHTML = S.chats.map((c,i)=>`
+    <div class="admin-row">
+      <input data-k="title" value="${escAttr(c.title)}" placeholder="Название" style="flex:2"/>
+      <input data-k="owner" value="${escAttr(c.owner)}" placeholder="Владелец"/>
+      <input data-k="emoji" value="${escAttr(c.emoji)}" placeholder="😎" style="width:64px; flex:none"/>
+      <input data-k="viewers" type="number" value="${c.viewers}" min="0" title="зрителей"/>
+      <label class="admin-chk"><input type="checkbox" data-k="online" ${c.online?'checked':''}/> online</label>
+      <button class="admin-del" title="Удалить" onclick="delAdminChat(${i})">✕</button>
+    </div>`).join('');
+}
+function delAdminChat(i){ S.chats.splice(i,1); renderAdminChats(); }
+function addAdminChat(){
+  S.chats.push({id:'c'+Date.now(), title:'Новый чат', owner:'Владелец', viewers:1, online:true, emoji:'💬', grad:Math.floor(Math.random()*8)});
+  renderAdminChats();
+}
+function renderAdminStreams(){
+  $('adminStreams').innerHTML = S.streams.map((s,i)=>`
+    <div class="admin-row">
+      <input data-k="title" value="${escAttr(s.title)}" placeholder="Название эфира" style="flex:2"/>
+      <input data-k="owner" value="${escAttr(s.owner)}" placeholder="Стример"/>
+      <input data-k="emoji" value="${escAttr(s.emoji)}" placeholder="📺" style="width:64px; flex:none"/>
+      <input data-k="viewers" type="number" value="${s.viewers}" min="0" title="зрителей"/>
+      <input data-k="url" value="${escAttr(s.url)}" placeholder="https://…m3u8" style="flex:2"/>
+      <button class="admin-del" title="Удалить" onclick="delAdminStream(${i})">✕</button>
+    </div>`).join('');
+}
+function delAdminStream(i){ S.streams.splice(i,1); renderAdminStreams(); }
+function addAdminStream(){
+  S.streams.push({id:'s'+Date.now(), title:'Новый эфир', owner:'Стример', start:Math.floor(Date.now()/1000)-3600, viewers:1, emoji:'📺', grad:Math.floor(Math.random()*8), url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'});
+  renderAdminStreams();
+}
+function collectAdminForms(){
+  S.name = $('setName').value.trim() || 'Ливача';
+  S.accent = $('setAccent').value;
+  S.accent2 = $('setAccent2').value;
+  S.bg = $('setBg').value;
+  S.onlineBase = Math.max(1, +$('setOnline').value || 186);
+  S.welcome = $('setWelcome').value.trim() || 'Добро пожаловать';
+  $('adminChats').querySelectorAll('.admin-row').forEach((row,i)=>{
+    row.querySelectorAll('[data-k]').forEach(el=>{
+      const k = el.dataset.k;
+      if(k==='online') S.chats[i].online = el.checked;
+      else if(k==='viewers') S.chats[i].viewers = Math.max(0, +el.value || 0);
+      else S.chats[i][k] = el.value;
+    });
+  });
+  $('adminStreams').querySelectorAll('.admin-row').forEach((row,i)=>{
+    row.querySelectorAll('[data-k]').forEach(el=>{
+      const k = el.dataset.k;
+      if(k==='viewers') S.streams[i].viewers = Math.max(0, +el.value || 0);
+      else S.streams[i][k] = el.value;
+    });
+  });
+  S.script = $('scriptArea').value;
+}
+function saveSettings(){
+  collectAdminForms();
+  localStorage.setItem('livacha_settings', JSON.stringify(S));
+  CHATS.length = 0; S.chats.forEach(c=>CHATS.push(c));
+  STREAMS.length = 0; S.streams.forEach(s=>STREAMS.push(s));
+  applyTheme();
+  $('onlineNum').textContent = S.onlineBase;
+  toast('✅ Настройки сохранены');
+}
+function resetSettings(){
+  if(!confirm('Сбросить ВСЕ настройки к стандартным?')) return;
+  localStorage.removeItem('livacha_settings');
+  location.reload();
+}
+function runCustomScript(manual){
+  if(!S || !S.script) { if(manual) toast('Скрипт пуст'); return; }
+  try { (new Function(S.script))(); if(manual) toast('▶ Скрипт выполнен'); }
+  catch(e){ console.error('[admin script]', e); if(manual) toast('Ошибка в скрипте: ' + e.message); }
+}
+
 /* ================= init ================= */
+loadSettings();
 renderUserBox();
 renderHome();
-document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ if($('loginBg').classList.contains('on')) closeLogin(); } });
+runCustomScript(false);
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Escape'){
+    if($('loginBg').classList.contains('on')) closeLogin();
+    if($('adminLoginBg').classList.contains('on')) closeAdminLogin();
+  }
+});
 </script>
 </body>
 </html>
